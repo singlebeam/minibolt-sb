@@ -1,141 +1,245 @@
 ---
-layout: default
-title: LNDg
-parent: + Lightning
-grand_parent: Bonus Section
-nav_exclude: true
-has_toc: false
+layout:
+  title:
+    visible: true
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
 ---
 
-# Bonus guide: LNDg
-{: .no_toc }
-
----
+# LNDg
 
 [LNDg](https://github.com/cryptosharks131/lndg){:target="_blank"} is a lite GUI web interface to help you manually manage your node and automate operations such as rebalancing, fee adjustments and channel node opening.
 
-Difficulty: Hard
-{: .label .label-red }
+{% hint style="danger" %}
+Difficultry: Hard
+{% endhint %}
 
-Status: Tested v3
-{: .label .label-green }
-
-![LNDg](../../../images/lndg.png)
-
----
-
-Table of contents
-{: .text-delta }
-
-1. TOC
-{:toc}
-
----
+<figure><img src="../../.gitbook/assets/lndg.png" alt=""><figcaption></figcaption></figure>
 
 ## Requirements
 
-* LND
-* virtualenv
-* uwsgi
-
----
+* [Bitcoin Core](../../bitcoin/bitcoin/bitcoin-client.md)
+* [LND](../../lightning/lightning-client.md) 
+* Others
+  * [PostgreSQL](../system/postgresql.md)
+  * [virtualenv](https://virtualenv.pypa.io/en/latest/)
+  * [uWSGI](https://uwsgi-docs.readthedocs.io/)
 
 ## Preparations
 
-### Python virtual environment
-
-[Virtualenv](https://virtualenv.pypa.io/en/latest/){:target="_blank"} is a tool to create isolated Python environments. 
-
-* With user "admin", check if `virtualenv` is already installed on your node. If not, use `apt` to install it.
-
-  ```sh
-  $ virtualenv --version
-  > -bash: virtualenv: command not found
-  $ sudo apt update
-  $ sudo apt install virtualenv
-  ```
+To run LNDg you will need to install `PostgreSQL`, `virtualenv`, and `uWSGI` (within the Python virtual environment created with virtualenv).
 
 ### Firewall
 
 * Configure firewall to allow incoming HTTP requests:
 
-  ```sh
-  $ sudo ufw allow 8889/tcp comment 'allow LNDg SSL'
-  $ sudo ufw status
-  ```
+```bash
+sudo ufw allow 8889/tcp comment 'allow LNDg ssl from anywhere'
+```
 
----
+### PostgreSQL Database for LNDg
 
-## LNDg
+* With user `admin`, check if you already have PostgreSQL installed
 
-### Installation
+```bash
+psql -V
+```
 
-We do not want to run LNDg alongside `bitcoind` and `lnd` because of security reasons. 
-For that we will create a separate user and we will be running the code as the new user. 
+**Example** of expected output:
 
-* Create a new user and make it a member of the "lnd" group to give it read access to the LND macaroons and data
+```
+psql (PostgreSQL) 17.0 (Ubuntu 17.0-1.pgdg22.04+1)
+```
+
+{% hint style="info" %}
+If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide installation process](../bonus-guides/system/postgresql.md#installation) before continuing with this guide
+{% endhint %}
+
+#### Create PostgreSQL database
+
+* With user `admin`, create a new database for LNDg as the `postgres` user and assign the user `admin` as the owner
+
+```bash
+sudo -u postgres createdb -O admin lndg
+```
+* Get required packages to connect LNDg with PostgreSQL
+
+```bash
+sudo apt install gcc python3-dev libpq-dev
+```
+
+### Python virtual environment
+
+[Virtualenv](https://virtualenv.pypa.io/en/latest/) is a tool to create isolated Python environments. 
+
+* With user `admin`, check if you already have `virtualenv` installed
+
+```bash
+virtualenv --version
+```
+
+**Example** of expected output:
+
+```bash
+virtualenv 20.13.0+ds from /usr/lib/python3/dist-packages/virtualenv/__init__.py
+```
+
+{% hint style="info" %}
+If you obtain "**command not found**" outputs, install `virtualenv` with apt
+{% endhint %}
+
+```bash
+sudo apt install virtualenv
+```
+
+## Installation
+
+### Create the lndg user & group
+
+We do not want to run LNDg code alongside `bitcoind` and `lnd` because of security reasons. For that, we will create a separate user and run the code as the new user. We will install LNDg in the home directory since it doesn't need much space.
+
+* Create the `lndg` user and group
   
-  ```sh
-  $ sudo adduser --disabled-password --gecos "" lndg
-  $ sudo adduser lndg lnd
-  $ sudo adduser lndg www-data
-  $ sudo adduser www-data lndg
-  ```
-  
-* Log in with the lndg user and create a symbolic link to the LND data directory
+```bash
+sudo adduser --disabled-password --gecos "" lndg
+```
 
-  ```sh
-  $ sudo su - lndg
-  $ ln -s /data/lnd /home/lndg/.lnd
-  ```
+* Add `lndg` user to the lnd and www-data groups
 
-* Check the version number of the latest LNDg release (you can also confirm with the [release page](https://github.com/cryptosharks131/lndg/releases)) and clone it.
+```bash
+sudo usermod -a -G lnd,www-data lndg
+```
+* Add 'www-data' user to the lndg group
 
-  ```sh
-  $ LATEST_RELEASE=$(wget -qO- https://api.github.com/repos/cryptosharks131/lndg/releases/latest | grep -oP '"tag_name":\s*"\K([^"]+)')
-  $ echo $LATEST_RELEASE
-  > v1.7.1
+```bash
+sudo adduser www-data lndg
+```
 
-  $ git clone --branch $LATEST_RELEASE https://github.com/cryptosharks131/lndg.git
-  $ cd lndg
-  ```
-  
-* Setup a Python virtual environment
+* Change to the `lndg` user
 
-  ```sh
-  $ virtualenv -p python .venv
-  ```
+```bash
+sudo su - lndg
+```
 
-* Install required dependencies and initialize some settings for your Django site. 
-A first time password will be output, save it somewhere safe (_e.g._, your password manager).
+* Create a symbolic link to the lnd data directory
 
-  ```sh
-  $ .venv/bin/pip install whitenoise
-  $ .venv/bin/pip install -r requirements.txt
-  $ .venv/bin/python initialize.py -wn
-  [...]
-  > FIRST TIME LOGIN PASSWORD:abc...123\
-  ```
+```bash
+ln -s /data/lnd /home/lndg/.lnd
+```
 
-* Generate some initial node data for your dashboard. If you get an error message, try running it again.
+* Confirm symbolic link has been created
 
-  ```sh
-  $ .venv/bin/python jobs.py
-  ```
+```bash
+ls -la .lnd
+```
+
+Expected output:
+
+<pre><code>lrwxrwxrwx 1 lndg lndg 9 Nov 10 01:03 <a data-footnote-ref href="#user-content-fn-10">.lnd -> /data/lnd</a></code></pre>
+
+<!--- OLD STYLE
+
+* Check the version number of the latest LNDg release (you can also confirm with the [release page](https://github.com/cryptosharks131/lndg/releases))
+
+```bash
+LATEST_RELEASE=$(wget -qO- https://api.github.com/repos/cryptosharks131/lndg/releases/latest | grep -oP '"tag_name":\s*"\K([^"]+)') && echo $LATEST_RELEASE
+```  
+
+**Example** of expected output:
+
+```
+v1.9.0
+```
+--->
+
+* Set a temporary version environment variable to the installation
+
+```bash
+VERSION=1.9.0
+```
+
+* Immport the GPG key of the developer
+
+```bash
+curl https://github.com/cryptosharks131.gpg | gpg --import
+```
+
+* Download the source code directly from GitHub, select the latest release branch associated, and go to the `lndg` folder
+
+```bash
+git clone --branch v$VERSION https://github.com/cryptosharks131/lndg.git && cd lndg
+```
+<!---
+
+## will include in when developer renews key ##
+
+* Verify the release
+
+```bash
+git verify-commit v$VERSION
+```
+
+**Example** of expected output:
+
+```
+gpg: Signature made Tue Sep 24 15:58:10 2024 UTC
+gpg:                using RSA key 1957FD54782C190096F4166F0A50748567ADEB28
+gpg: Good signature from "cryptosharks131 <cryptosharks131@gmail.com>" [expired]
+gpg: Note: This key has expired!
+Primary key fingerprint: 1957 FD54 782C 1900 96F4  166F 0A50 7485 67AD EB28
+```
+--->
+
+* Create a Python virtual environment
+
+```bash
+virtualenv -p python3 .venv
+```
+
+* Install required dependencies
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+```
+* Initialize necessary settings for your Django site. A first time password will be generated - save it somewhere safe.
+
+```bash
+.venv/bin/python initialize.py
+```
+
+Expected output:
+
+```
+Setting up initial user...
+Superuser created successfully.
+FIRST TIME LOGIN PASSWORD:abc...123
+```
+
+<!--- Original test for debug server - thinking this step is unneccessary
 
 ### First start
 
 * Still with the "lndg" user, start the server
 
-  ```sh
-  $ cd ~/lndg
-  $ .venv/bin/python manage.py runserver 0.0.0.0:8889
-  > [...]
-  > Starting development server at http://0.0.0.0:8889/
-  > Quit the server with CONTROL-C.
-  ```
+```bash
+.venv/bin/python manage.py runserver 0.0.0.0:8889
+```
+ 
+Expected output
 
-* Now point your browser to the LNDg Python server, for example http://raspibolt.local:8889 
+```
+> [...]
+> Starting development server at http://0.0.0.0:8889/
+> Quit the server with CONTROL-C.
+```
+
+* Now point your browser to the LNDg Python server, for example http://minibolt.local:8889 
 (or your node's IP address, e.g. http://192.168.0.20:8889). 
 
 * The initial login user is "lndg-admin" and the password is the one generated just above. 
@@ -145,512 +249,398 @@ If you didn't save the password, you can get it again with: `nano /home/lndg/lnd
 
 * For extra security, delete the text file that contains the password
 
-  ```sh
-  $ rm /home/lndg/lndg/data/lndg-admin.txt
-  ```
+```bash
+rm /home/lndg/lndg/data/lndg-admin.txt
+```
  
-* Exit user lndg and return to admin for the next steps.
+* Exit `lndg` user session and return to `admin` for the next steps.
 
-  ```sh
-  $ exit
-  ```
+```bash
+exit
+```
 
-### Make the LNDg database easy to backup
+--->
+### Configure LNDg to use PostgreSQL
 
-LNDg stores the LN node routing statistics and settings in a SQL database. We'll move this database to our data folder to make it easier to archive or backup if desired.
+* As the user `lndg`, enter the LNDg installation folder
 
-* Create the LNDg data directory and copy the database over
- 
-  ```sh
-  $ sudo mkdir /data/lndg
-  $ sudo chown lndg:lndg /data/lndg
-  $ sudo rsync -rhvPog --append-verify /home/lndg/lndg/data/db.sqlite3 /data/lndg
-  ```
+```bash
+cd ~/lndg
+```
 
-* Check that the database is now in /data/lndg and owned by the "lndg" user
+* Upgrade setuptools
 
-  ```sh
-  $ ls -la /data/lndg
-  > drwxr-xr-x  2 lndg    lndg        4096 Nov 11 11:24 .
-  > drwxr-xr-x 14 admin   admin       4096 Nov 11 11:19 ..
-  > -rw-r--r--  1 lndg    lndg    19468288 Nov 11 11:23 db.sqlite3
-  ```
+```bash
+.venv/bin/python -m pip install --upgrade setuptools
+```
 
-* Delete the old database from the LNDg runtime directory and instead create a symbolic link 
+* Build psycopg2 for PostgreSQL connection
 
-  ```sh
-  $ sudo rm /home/lndg/lndg/data/db.sqlite3
-  $ sudo ln -s /data/lndg/db.sqlite3 /home/lndg/lndg/data/db.sqlite3
-  $ sudo chown -h lndg:lndg /home/lndg/lndg/data/db.sqlite3
-  $ sudo ls -la /home/lndg/lndg/data/
-  > lrwxrwxrwx 1 lndg lndg   21 Nov 11 11:28 db.sqlite3 -> /data/lndg/db.sqlite3
-  ```
+```bash
+.venv/bin/python -m pip install psycopg2
+```
 
+By default, LNDg stores the LN node routing statistics and settings in a SQLite database. We'll update the `DATABASES` section of the initialized `settings.py` file to use our newly created `lndg` database.
+
+* Change to LNDg configuration folder
+
+```bash
+cd ~/lndg/lndg
+```
+
+* Edit the `settings.py` file
+
+```bash
+nano +87 settings.py --linenumbers
+```
+
+* Replace the `DATABASES` section with the following:
+
+<pre></code>
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'lndg',
+        'USER': 'admin',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+</code></pre>
+
+Change back to the LNDg installation folder
+
+```bash
+cd ~/lndg
+```
+
+* Initialize the PostgreSQL database
+
+```bash
+.venv/bin/python manage.py migrate
+```
+
+* Exit to the `admin` user session
+
+```bash
+exit
+```
+
+### Backend Controller
+
+The LNDg Python script `~/lndg/controller.py` orchestrates the services needed to update the backend database with the most up-to-date information, rebalance any channels based on your LNDg dashboard settings, listen for any failure events in your HTLC stream, and serves the p2p trade secrets.
+
+* As user `admin`, create a systemd service file to run the LNDg `controller.py` Python script
+
+```bash
+sudo nano /etc/systemd/system/lndg-controller.service
+```
+* Paste the following configuration. Save and exit.
+
+<pre><code>
+# MiniBolt: systemd unit for LNDg backend controller
+# /etc/systemd/system/lndg-controller.service
+  
+[Unit]
+Description=LNDg backend controller
+<strong>Requires=lnd.service
+</strong>After=lnd.service
+
+[Service]
+WorkingDirectory=/home/lndg/lndg
+Environment=PYTHONBUFFERED=1
+ExecStart=/home/lndg/lndg/.venv/bin/python /home/lndg/lndg/controller.py
+
+User=lndg
+Group=lndg
+
+# Process management
+####################
+Restart=always
+Type=notify
+RestartSec=60
+TimoutSec=300
+
+# Hardening Measures
+####################
+PrivateTmp=true
+ProtectSystem=full
+NoNewPriviledges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+* Enable autoboot **(optional)**
+
+```bash
+sudo systemctl enable lndg-controller
+```
 ### Web server configuration
 
-* As user `lndg` install uwsgi within the LNDg Python virtual environment
+uWSGI is an application server that helps deploy web applications, especially those written in Python. It acts as a bridge between web servers (like Nginx) and web application frameworks (like Django).
 
-  ```sh
-  $ sudo su - lndg
-  $ cd ~/lndg
-  $ .venv/bin/python -m pip install uwsgi
-  ```
+* Change to the `lndg` user
 
-* Create the initialization file and paste the following lines. Save and exit.
+```bash
+sudo su - lndg
+```
 
-  ```sh
-  $ nano lndg.ini
-  ```
+* Install uWSGI within the LNDg Python virtual environment
 
-  ```ini
-  # lndg.ini file
-  [uwsgi]
-  
-  ###########################
-  # Django-related settings #
-  ###########################
-  # the base directory (full path)
-  chdir           = /home/lndg/lndg
-  # Django's wsgi file
-  module          = lndg.wsgi
-  # the virtualenv (full path)
-  home            = /home/lndg/lndg/.venv
-  #location of log files
-  logto           = /var/log/uwsgi/%n.log
+```bash
+.venv/bin/python -m pip install uwsgi
+```
 
-  ############################
-  # process-related settings #
-  ############################
-  # master
-  master          = true
-  # maximum number of worker processes
-  processes       = 1
-  # the socket (use the full path to be safe
-  socket          = /home/lndg/lndg/lndg.sock
-  # ... with appropriate permissions - may be needed
-  chmod-socket    = 660
-  # clear environment on exit
-  vacuum          = true
-  ```
+* Create the initialization file
 
-* Create the uwsgi parameter file and paste the following lines. Save and exit.
+```bash
+nano lndg.ini
+```
 
-  ```sh
-  $ nano uwsgi_params
-  ```
+* Paste the following configuration. Save and exit
 
-  ```ini
-  uwsgi_param  QUERY_STRING       $query_string;
-  uwsgi_param  REQUEST_METHOD     $request_method;
-  uwsgi_param  CONTENT_TYPE       $content_type;
-  uwsgi_param  CONTENT_LENGTH     $content_length;
-  
-  uwsgi_param  REQUEST_URI        "$request_uri";
-  uwsgi_param  PATH_INFO          "$document_uri";
-  uwsgi_param  DOCUMENT_ROOT      "$document_root";
-  uwsgi_param  SERVER_PROTOCOL    "$server_protocol";
-  uwsgi_param  REQUEST_SCHEME     "$scheme";
-  uwsgi_param  HTTPS              "$https if_not_empty";
-  
-  uwsgi_param  REMOTE_ADDR        "$remote_addr";
-  uwsgi_param  REMOTE_PORT        "$remote_port";
-  uwsgi_param  SERVER_PORT        "$server_port";
-  uwsgi_param  SERVER_NAME        "$server_name";
-  ```
+<pre><code>
+# lndg.ini file
+[uwsgi]
+
+###########################
+# Django-related settings #
+###########################
+# the base directory (full path)
+chdir           = /home/lndg/lndg
+# Django's wsgi file
+module          = lndg.wsgi
+# the virtualenv (full path)
+home            = /home/lndg/lndg/.venv
+#location of log files
+logto           = /var/log/uwsgi/%n.log
+
+############################
+# process-related settings #
+############################
+# master
+master          = true
+# maximum number of worker processes
+processes       = 1
+# the socket (use the full path to be safe)
+socket          = /home/lndg/lndg/lndg.sock
+# ... with appropriate permissions - may be needed
+chmod-socket    = 660
+# clear environment on exit
+vacuum          = true
+</code></pre>
+
+* Create the uwsgi parameter file
+
+```bash
+nano uwsgi_params
+```
+
+* Paste the following configuration. Save and exit
+
+<pre><code>
+uwsgi_param  QUERY_STRING       $query_string;
+uwsgi_param  REQUEST_METHOD     $request_method;
+uwsgi_param  CONTENT_TYPE       $content_type;
+uwsgi_param  CONTENT_LENGTH     $content_length;
+
+uwsgi_param  REQUEST_URI        "$request_uri";
+uwsgi_param  PATH_INFO          "$document_uri";
+uwsgi_param  DOCUMENT_ROOT      "$document_root";
+uwsgi_param  SERVER_PROTOCOL    "$server_protocol";
+uwsgi_param  REQUEST_SCHEME     "$scheme";
+uwsgi_param  HTTPS              "$https if_not_empty";
+
+uwsgi_param  REMOTE_ADDR        "$remote_addr";
+uwsgi_param  REMOTE_PORT        "$remote_port";
+uwsgi_param  SERVER_PORT        "$server_port";
+uwsgi_param  SERVER_NAME        "$server_name";
+</code></pre>
 
 * Exit the "lndg" user session
 
-  ```sh
-  $ exit
-  ```
+```bash
+exit
+```
 
-* Create the uwsgi service file
+* Create the log and socket files
+<!--- not sure how to optimize/describe this workflow for enduser --->
 
-  ```sh
-  $ sudo nano /etc/systemd/system/uwsgi.service
-  ```
-  
-  ```ini
-  # RaspiBolt: systemd unit for LNDg uWSGI app
-  # /etc/systemd/system/uwsgi.service
-  [Unit]
-  Description=LNDg uWSGI app
-  After=lnd.service
-  PartOf=lnd.service
-  Wants=jobs-lndg.timer rebalancer-lndg.timer htlc-stream-lndg.service
-  
-  [Service]
-  ExecStart=/home/lndg/lndg/.venv/bin/uwsgi --ini /home/lndg/lndg/lndg.ini
-  User=lndg
-  Group=www-data
-  Restart=on-failure
-  # Wait 4 minutes before starting to give LND time to fully start.  Increase if needed.
-  TimeoutStartSec=240
-  RestartSec=30
-  KillSignal=SIGQUIT
-  Type=notify
-  NotifyAccess=all
-  
-  [Install]
-  WantedBy=sockets.target
-  ```
+```bash
+sudo mkdir /var/log/uwsgi && sudo touch /var/log/uwsgi/lndg.log && sudo chgrp -R www-data /var/log/uwsgi && sudo chmod 660 /var/log/uwsgi/lndg.log
+```  
 
-* Create a nginx configuration file for the LNDg website with a server listening on port 8889
+```bash
+sudo touch /home/lndg/lndg/lndg.sock && sudo chown lndg:www-data /home/lndg/lndg/lndg.sock && sudo chmod 660 /home/lndg/lndg/lndg.sock
+```
 
-  ```sh
-  $ sudo nano /etc/nginx/sites-available/lndg-ssl.conf
-  ```
+* Create the uWSGI service file
+
+```bash
+sudo nano /etc/systemd/system/uwsgi.service
+```
+
+* Paste the following configuration. Save and exit
+
+<pre><code>
+# MiniBolt: systemd unit for LNDg uWSGI app
+# /etc/systemd/system/uwsgi.service
+[Unit]
+Description=LNDg uWSGI app
+After=lnd.service
+Requires=lnd.service
+
+[Service]
+ExecStart=/home/lndg/lndg/.venv/bin/uwsgi --ini /home/lndg/lndg/lndg.ini
+User=lndg
+Group=www-data
+Restart=on-failure
+# Wait 4 minutes before starting to give LND time to fully start.  Increase if needed.
+TimeoutStartSec=240
+RestartSec=30
+KillSignal=SIGQUIT
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+* Enable autoboot **(optional)**
+
+```bash
+sudo systemctl enable uwsgi
+```
+
+### Reverse proxy
+
+In the security [section](../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
+
+* With user `admin`, create the reverse proxy configuration
+
+```bash
+sudo nano /etc/nginx/sites-available/lndg-reverse-proxy.conf
+```
 
 * Paste the following configuration lines. Save and exit.
 
-  ```ini
-  upstream django {
-    server unix:///home/lndg/lndg/lndg.sock; # for a file socket
+<pre><code>
+upstream django {
+  server unix:///home/lndg/lndg/lndg.sock; # for a file socket
+}
+
+server {
+  # the port your site will be served on
+  listen 8889 ssl;
+  listen [::]:8889 ssl;
+  ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+  ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+  ssl_session_timeout 4h;
+  ssl_protocols TLSv1.3;
+  ssl_prefer_server_ciphers on;
+  
+  # the domain name it will serve for
+  server_name _;
+  charset     utf-8;
+  
+  # max upload size
+  client_max_body_size 75M;
+
+  # max wait for django time
+  proxy_read_timeout 180;
+
+  # Django media
+  location /static {
+    alias /home/lndg/lndg/gui/static; # your Django project's static files - amend as required
   }
-  
-  server {
-    # the port your site will be served on
-    listen 8889 ssl;
-    listen [::]:8889 ssl;
-    ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-    ssl_session_timeout 4h;
-    ssl_protocols TLSv1.3;
-    ssl_prefer_server_ciphers on;
-  
-    # the domain name it will serve for
-    server_name _;
-    charset     utf-8;
-  
-    # max upload size
-    client_max_body_size 75M;
-  
-    # max wait for django time
-    proxy_read_timeout 180;
-  
-    # Django media
-    location /static {
-        alias /home/lndg/lndg/gui/static; # your Django project's static files - amend as required
-    }
-  
-    # Finally, send all non-media requests to the Django server.
-    location / {
-        uwsgi_pass  django;
-        include     /home/lndg/lndg/uwsgi_params; # the uwsgi_params file
-    }
+
+# Finally, send all non-media requests to the Django server.
+  location / {
+    uwsgi_pass  django;
+    include     /home/lndg/lndg/uwsgi_params; # the uwsgi_params file
   }
-  ```
+}
+</pre></code>
 
 * Create a symlink in the `sites-enabled` directory
 
-  ```sh
-  $ sudo ln -sf /etc/nginx/sites-available/lndg-ssl.conf /etc/nginx/sites-enabled/
-  ```
+```bash
+sudo ln -s /etc/nginx/sites-available/lndg-reverse-proxy.conf /etc/nginx/sites-enabled/
+```
 
 * Open the nginx configuration file
 
-  ```sh
-  $ sudo nano /etc/nginx/nginx.conf
-  ```
+```bash
+sudo nano /etc/nginx/nginx.conf
+```
 
-* Paste the following configuration lines between the existing `event` and `stream` blocks . Save and exit.
+* Add the following configuration lines inside the `http` block. Save and exit.
 
-  ```ini
-  http {
-  
-          ##
-          # Basic Settings
-          ##
-  
-          sendfile on;
-          tcp_nopush on;
-          types_hash_max_size 2048;
-          # server_tokens off;
-  
-          # server_names_hash_bucket_size 64;
-          # server_name_in_redirect off;
-  
-          include /etc/nginx/mime.types;
-          default_type application/octet-stream;
-  
-          ##
-          # SSL Settings
-          ##
-  
-          ssl_protocols TLSv1.3;
-          ssl_prefer_server_ciphers on;
-  
-          ##
-          # Logging Settings
-          ##
-  
-          access_log /var/log/nginx/access.log;
-          error_log /var/log/nginx/error.log;
-  
-          ##
-          # Gzip Settings
-          ##
-  
-          gzip on;
-  
-          # gzip_vary on;
-          # gzip_proxied any;
-          # gzip_comp_level 6;
-          # gzip_buffers 16 8k;
-          # gzip_http_version 1.1;
-          # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-  
-          ##
-          # Virtual Host Configs
-          ##
-  
-          include /etc/nginx/conf.d/*.conf;
-          include /etc/nginx/sites-enabled/*;
-  }
-  ```
-
-* Create the log and sock files
-
-  ```sh
-  # Log file
-  $ sudo mkdir /var/log/uwsgi
-  $ sudo touch /var/log/uwsgi/lndg.log
-  $ sudo chgrp -R www-data /var/log/uwsgi
-  $ sudo chmod 660 /var/log/uwsgi/lndg.log
-  
-  # Sock file
-  $ sudo touch /home/lndg/lndg/lndg.sock
-  $ sudo chown lndg:www-data /home/lndg/lndg/lndg.sock
-  $ sudo chmod 660 /home/lndg/lndg/lndg.sock
-  ```
+<code></pre>
+  # settings used for LNDg Django site
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+</pre></code>
 
 * Test the nginx configuration
 
-  ```sh
-  $ sudo nginx -t
-  > nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-  > nginx: configuration file /etc/nginx/nginx.conf test is successful
-  ```
+```bash
+sudo nginx -t
+```
 
-* Enable and start the uwsgi service
+Expected output:
 
-  ```sh
-  $ sudo systemctl enable uwsgi
-  $ sudo systemctl start uwsgi
-  $ sudo systemctl status uwsgi
-  > [...]
-  > Sep 25 22:47:21 raspibolt systemd[1]: Starting LNDg uWSGI app...
-  > Sep 25 22:47:21 raspibolt uwsgi[1371109]: [uWSGI] getting INI configuration from /home/lndg/lndg/lndg.ini
-  > Sep 25 22:47:22 raspibolt systemd[1]: Started LNDg uWSGI app.
-  ```
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+* Reload NGINX configuration to apply changes
+
+```bash
+sudo systemctl reload nginx
+```
+### Run the web app
+
+* Start the uWSGI service
+
+```bash
+sudo systemctl start uwsgi
+```
+
+* Check the status of the uWSGI service
+
+```bash
+sudo systemctl status uwsgi
+```
+
+Expected output:
+
+```
+> Starting LNDg uWSGI app...
+> [uWSGI] getting INI configuration from /home/lndg/lndg/lndg.ini
+> Started LNDg uWSGI app.
+
+```
 
 * To check the uwsgi log (Ctrl+c to exit the log)
 
-  ```sh
-  $ sudo journalctl -f -u uwsgi
-  ```
+```bash
+sudo journalctl -fu uwsgi
+```
 
-* Restart nginx
+You can now access LNDg from within your local network by browsing to https://minibolt.local:8889 (or your equivalent IP address).
 
-  ```sh
-  $ sudo systemctl restart nginx
-  ```
+The default login is `lndg-admin` and the first time password was generated by the `initialize.py` script. You can find the password at `/home/lndg/lndg/data/password.txt'(you should delete this file for security reasons). You can change the password in the GUI.
 
-You can now access LNDg from within your local network by browsing to https://raspibolt.local:8889 (or your equivalent IP address).
+* To delete the first time password file
 
-### Backend refreshes
-
-LNDg uses a Python script (`~/lndg/jobs.py`), to gather data about your node that is then displayed in the GUI dashboard. 
-To have updated information in the GUI, it is necessary to regularly run the script to collect new data.
-
-* Create a systemd service file to run the LNDg `jobs.py` Python script. Save (Ctrl+o) and exit (Ctrl+x).
-
-  ```sh
-  $ sudo nano /etc/systemd/system/jobs-lndg.service
-  ```
-
-  ```ini
-  # RaspiBolt: systemd unit for LNDg
-  # /etc/systemd/system/jobs-lndg.service
-  
-  [Unit]
-  Description=LNDg backend refreshes Python script
-  
-  [Service]
-  ExecStart=/home/lndg/lndg/.venv/bin/python /home/lndg/lndg/jobs.py
-  User=lndg
-  
-  StandardError=append:/var/log/lnd_jobs_error.log
-  RuntimeMaxSec=3600
-  ```
-
-* Create a systemd timer to activate the service every 20 seconds. Save (Ctrl+o) and exit (Ctrl+x).
-
-  ```sh
-  $ sudo nano /etc/systemd/system/jobs-lndg.timer
-  ```
-
-  ```ini
-  # RaspiBolt: systemd unit for LNDg
-  # /etc/systemd/system/jobs-lndg.timer  
-  
-  [Unit]
-  Description=Timer to activate jobs-lndg.service every 20 seconds
-  After=uwsgi.service
-  PartOf=uwsgi.service
-
-  [Timer]
-  OnBootSec=300
-  OnUnitActiveSec=20
-  AccuracySec=1
-  
-  [Install]
-  WantedBy=timers.target
-  ```
-
-* Enable the timer to start at boot. Start the timer and check its status. Exit with `Ctrl`+`c`.
-
-  ```sh
-  $ sudo systemctl enable jobs-lndg.timer
-  $ sudo systemctl start jobs-lndg.timer
-  $ sudo systemctl status jobs-lndg.timer
-  > [...]
-  >   Loaded: loaded (/etc/systemd/system/jobs-lndg.timer; enabled; vendor preset: enabled)
-  >   Active: active (running) since Fri 2022-11-11 14:09:08 GMT; 56min ago
-  > [...]
-  ```
-
-* Check that the backend refreshes Python script is run every 20 seconds or so
-
-  ```sh
-  $ sudo journalctl -f -u jobs-lndg.service
-  > [...]
-  > Nov 11 14:25:24 raspibolt systemd[1]: Started LNDg backend refreshes Python script.
-  > Nov 11 14:25:27 raspibolt systemd[1]: jobs-lndg.service: Succeeded.
-  > Nov 11 14:25:27 raspibolt systemd[1]: jobs-lndg.service: Consumed 3.063s CPU time.
-  > Nov 11 14:25:44 raspibolt systemd[1]: Started LNDg backend refreshes Python script.
-  > Nov 11 14:25:47 raspibolt systemd[1]: jobs-lndg.service: Succeeded.
-  > Nov 11 14:25:47 raspibolt systemd[1]: jobs-lndg.service: Consumed 3.107s CPU time.
-  ```
-
-### Rebalancer runs
-
-LNDg uses a Python script (`~/lndg/rebalancer.py`) to automatically create circular rebalancing payments based on user-defined parameters.
-
-* Create a systemd service file to run the LNDg `rebalancer.py` Python script. Save (Ctrl+o) and exit (Ctrl+x).
-
-  ```sh
-  $ sudo nano /etc/systemd/system/rebalancer-lndg.service
-  ```
-
-  ```ini
-  # RaspiBolt: systemd unit for LNDg
-  # /etc/systemd/system/rebalancer-lndg.service
-  
-  [Unit]
-  Description=LNDg rebalancer Python script
-  
-  [Service]
-  ExecStart=/home/lndg/lndg/.venv/bin/python /home/lndg/lndg/rebalancer.py
-  User=lndg
-  
-  StandardError=append:/var/log/lnd_jobs_error.log
-  RuntimeMaxSec=3600
-  ```
-
-* Create a systemd timer to activate the service every 20 seconds. Save (Ctrl+o) and exit (Ctrl+x).
-
-  ```sh
-  $ sudo nano /etc/systemd/system/rebalancer-lndg.timer
-  ```
-
-  ```ini
-  # RaspiBolt: systemd unit for LNDg
-  # /etc/systemd/system/rebalancer-lndg.timer  
-  
-  [Unit]
-  Description=Timer to activate rebalancer-lndg.service every 20 seconds
-  After=uwsgi.service
-  PartOf=uwsgi.service
-
-  [Timer]
-  OnBootSec=300
-  OnUnitActiveSec=20
-  AccuracySec=1
-  
-  [Install]
-  WantedBy=timers.target
-  ```
-
-* Enable the timer to start at boot. Start the timer and check its status. Exit with `Ctrl`+`c`.
-
-  ```sh
-  $ sudo systemctl enable rebalancer-lndg.timer
-  $ sudo systemctl start rebalancer-lndg.timer
-  $ sudo systemctl status rebalancer-lndg.timer
-  > [...]
-  >   Loaded: loaded (/etc/systemd/system/rebalancer-lndg.timer; enabled; vendor preset: enabled)
-  >   Active: active (running) since Fri 2022-11-11 11:49:59 GMT; 3h 12min ago
-  > [...]
-  ```
-
-* Check that the rebalancer Python script is running regularly.  
-  Note: It might take a few minutes for the rebalancing script to complete its tasks.
-
-  ```sh
-  $ sudo journalctl -f -u rebalancer-lndg.service
-  > [...]
-  > Nov 11 14:52:30 raspibolt systemd[1]: rebalancer-lndg.service: Consumed 1.674s CPU time. 
-  > Nov 11 14:52:48 raspibolt systemd[1]: Started LNDg rebalancer Python script.
-  > Nov 11 14:58:50 raspibolt systemd[1]: rebalancer-lndg.service: Succeeded.
-  > Nov 11 14:58:50 raspibolt systemd[1]: rebalancer-lndg.service: Consumed 15.770s CPU time.
-  > Nov 11 14:58:50 raspibolt systemd[1]: Started LNDg rebalancer Python script.
-  ```
-
-### HTLC failure stream data
-
-LNDg uses a Python script (`~/lndg/htlc_stream.py`) to keep a log of failed HTLCs on your node. The list of failed HTLCs together with some information can be seen in the GUI at https://raspibolt.local:8889/failed_htlcs. The last 10 failed HTLCs are also displayed at the bottom of the home webpage.
-
-* Create a systemd service file to run the LNDg `htlc_stream.py` Python script. Save (Ctrl+o) and exit (Ctrl+x).
-
-  ```sh
-  $ sudo nano /etc/systemd/system/htlc-stream-lndg.service
-  ```
-
-  ```ini
-  # RaspiBolt: systemd unit for LNDg
-  # /etc/systemd/system/htlc-stream-lndg.service   
-    
-  [Unit]
-  Description=LNDg HTLC stream Python script
-  After=uwsgi.service
-  PartOf=uwsgi.service
-  
-  [Service]
-  ExecStart=/home/lndg/lndg/.venv/bin/python /home/lndg/lndg/htlc_stream.py
-  User=lndg
-  
-  StandardError=append:/var/log/lnd_htlc_stream_error.log
-  Restart=always
-  RestartSec=60s
-  
-  [Install]
-  WantedBy=multi-user.target
-  ```
-
-* Enable the service to start at boot. Start the service and check its status. Exit with `Ctrl`+`c`.
-
-  ```sh
-  $ sudo systemctl enable htlc-stream-lndg.service
-  $ sudo systemctl start htlc-stream-lndg.service
-  $ sudo systemctl status htlc-stream-lndg.service
-  > [...]
-  >   Loaded: loaded (/etc/systemd/system/htlc-stream-lndg.service; enabled; vendor preset: enabled)
-  >   Active: active (running) since Fri 2022-11-11 15:20:59 GMT; 1s ago
-  > [...]
-  ```
-
----
+```bash
+sudo rm /home/lndg/lndg/data/password.txt
+```
 
 ## Dashboard privacy configuration
 
@@ -660,12 +650,14 @@ LNDg offers the possibility to create links to blockchain and lightning explorer
 
 To preserve privacy it is better that you use your own self-hosted blockchain explorer (e.g. the BTC RPC Explorer).
 
-* Open your LNDg website at https://raspibolt.local:8889 (replace raspibolt.local by your node's IP address if necessary)
+* Open your LNDg website at https://minibolt.local:8889 (replace minibolt.local with your node's IP address if necessary)
 * Click on the "Advanced settings" link
 * Scroll down to the "Update Local Settings" section
-* Find the "NET URL" option and paste the following value:
-  *  if you use the [BTC RPC Explorer](../../bitcoin/btcrpcexplorer.md): `https://raspibolt.local:4000` 
-  *  if you prefer [Mempool](../bitcoin/mempool.md): `https://raspibolt.local:4081`
+* Find the "NET URL" option and paste the following value if you use [BTC RPC Explorer](../../bitcoin/btcrpcexplorer.md):
+
+```
+https://minibolt.local:4000
+``` 
 
 ### Lightning explorer
 
@@ -673,9 +665,12 @@ Although there is not yet a self-hosted, private, lightning explorer, the Mempoo
 
 * Find the "Graph URL" option and paste the following value:
   * if you don't want to leak your IP address, delete the content of the box and leave it empty
-  * if you want to use Mempool, enter: `https://mempool.space/lightning`. As an additional privacy step, you might want to have a VPN running on your computer.
+  * if you want to use Mempool, enter: `https://mempool.space/lightning`. As an additional privacy step, you may consider running through a vpn.
 
----
+
+
+
+<!--- will finish this section later
 
 ## Remote access over Tor (optional) 
 
@@ -704,8 +699,6 @@ Do you want to access LNDg remotely? You can easily do so by adding a Tor hidden
   ```
 
 With the Tor browser, you can access this onion address from any device.
-
----
 
 ## For the future: LNDg update
 
@@ -738,8 +731,6 @@ With the Tor browser, you can access this onion address from any device.
   ```sh
   $ sudo systemctl start uwsgi.service
   ```
-
----
 
 ## Uninstall
 
@@ -821,6 +812,6 @@ With the Tor browser, you can access this onion address from any device.
 
 <br /><br />
 
----
+--->
 
 << Back: [+ Lightning](index.md)
