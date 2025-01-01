@@ -19,11 +19,7 @@ layout:
 
 [Fulcrum](https://github.com/cculianu/Fulcrum) is a fast & nimble SPV server for Bitcoin created by [Calin Culianu](https://github.com/cculianu). It can be used as an alternative to Electrs because of its performance, as we can see in Craig Raw's [comparison](https://www.sparrowwallet.com/docs/server-performance.html) of servers.
 
-<div data-full-width="false">
-
-<figure><img src="../../.gitbook/assets/Fulcrum_logo" alt="" width="375"><figcaption></figcaption></figure>
-
-</div>
+<div data-full-width="false"><figure><img src="../../.gitbook/assets/Fulcrum_logo" alt="" width="375"><figcaption></figcaption></figure></div>
 
 ## Requirements
 
@@ -110,7 +106,7 @@ Expected output:
 
 ### Download binaries
 
-We have our Bitcoin Core configuration file set up and can now move on to the next part of the Fulcrum installation.
+We have our Bitcoin Core configuration file set up and can move on to the next part of the Fulcrum installation.
 
 * Login as `admin` user and change to a temporary directory which is cleared on reboot
 
@@ -249,7 +245,7 @@ sudo rm -r Fulcrum-$VERSION-x86_64-linux Fulcrum-$VERSION-x86_64-linux.tar.gz Fu
 {% endcode %}
 
 {% hint style="info" %}
-If you come to update, this is the final step, go back to the [Upgrade section](electrum-server.md#for-the-future-fulcrum-upgrade) to continue
+If you come to update, this is the final step, go back to the [Upgrade section](electrum-server.md#upgrade) to continue
 {% endhint %}
 
 ### Create the fulcrum user & group
@@ -452,14 +448,10 @@ sudo systemctl start fulcrum
 
 **Example** of expected output on the first terminal with `journalctl -fu fulcrum` ⬇️
 
-<div data-full-width="false">
-
-<figure><img src="../../.gitbook/assets/fulcrum-index.PNG" alt=""><figcaption></figcaption></figure>
-
-</div>
+<div data-full-width="false"><figure><img src="../../.gitbook/assets/fulcrum-index.PNG" alt=""><figcaption></figcaption></figure></div>
 
 {% hint style="info" %}
-> Fulcrum must first fully index the blockchain and compact its database before you can connect to it with your wallets. This can take up to \~1.5 - 4 days or more, depending on the hardware. Only proceed with the [Blockchain explorer: BTC RPC Explorer](blockchain-explorer.md) and [Desktop Wallet Section](desktop-wallet.md) once Fulcrum is ready.
+> Fulcrum must first fully index the blockchain and compact its database before you can connect to it with your wallets. This can take up to \~1.5 - 4 days or more, depending on the hardware. Only proceed with the [Blockchain explorer: BTC RPC Explorer](blockchain-explorer.md) and [Desktop Wallet Section](desktop-signing-app-sparrow.md) once Fulcrum is ready.
 
 > Fulcrum will now index the whole Bitcoin blockchain so that it can provide all necessary information to wallets. With this, the wallets you use no longer need to connect to any third-party server to communicate with the Bitcoin peer-to-peer network.
 {% endhint %}
@@ -485,9 +477,9 @@ sudo rm -r /data/fulcrum/fulcrum_db/*
 sudo systemctl start fulcrum
 ```
 
-\-> You should see the logs of the [Run process](electrum-server.md#run) before again
+-> You should see the logs of the [Run process](electrum-server.md#run) before again
 
-\-> The troubleshooting note could be helpful after experiencing **data corruption due to a power outage** during normal operation
+-> The troubleshooting note could be helpful after experiencing **data corruption due to a power outage** during normal operation
 {% endhint %}
 
 * When you see logs like this `SrvMgr: starting 3 services ...`, which means that Fulcrum is fully indexed
@@ -522,7 +514,7 @@ tcp   LISTEN 0      50      127.0.0.1:8000       0.0.0.0:*    users:(("Fulcrum",
 ```
 
 {% hint style="success" %}
-Congrats! Now you have a high-performance and self-hosted Electrum Server on your node. Now you can process installing the [Blockchain Explorer: BTC RPC Explorer](blockchain-explorer.md) or connect your [Desktop wallet: Sparrow wallet](desktop-wallet.md) or [Electrum Wallet ](../../bonus/bitcoin/electrum-wallet-desktop.md)[Desktop](../../bonus/bitcoin/electrum-wallet-desktop.md)
+Congrats! Now you have a high-performance and self-hosted Electrum Server on your node. Now you can process installing the [Blockchain Explorer: BTC RPC Explorer](blockchain-explorer.md) or connect your [Desktop signing app: Sparrow Wallet](desktop-signing-app-sparrow.md) or [Electrum Wallet ](../../bonus/bitcoin/electrum-wallet-desktop.md)[Desktop](../../bonus/bitcoin/electrum-wallet-desktop.md)
 {% endhint %}
 
 ## Extras (optional)
@@ -684,7 +676,7 @@ Filename               Type            Size            Used            Priority
 
 ## Upgrade
 
-Follow the complete [Download and set up Fulcrum](electrum-server.md#download-and-set-up-fulcrum) section replacing the environment variable `"VERSION=x.xx"` value for the latest if it has not been already changed in this guide.
+Follow the complete [Installation section](electrum-server.md#installation) until the [Binaries installation section](electrum-server.md#binaries-installation) (included), replacing the environment variable `"VERSION=x.xx"` value for the latest if it has not already been changed in this guide.
 
 * Restart the service to apply the changes
 
@@ -831,11 +823,7 @@ Filename            Type                Size           Used    Priority
 
 ## Port reference
 
-|  Port |  Protocol |     Use    |
-| :---: | :-------: | :--------: |
-| 50001 |    TCP    |  TCP port  |
-| 50002 | TCP (SSL) |  SSL port  |
-|  8000 |    TCP    | Admin port |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="c7bSQ5JNyEzd" label="TCP" color="blue"></option><option value="sTSvdCtBoTFb" label="SSL" color="blue"></option><option value="hMCHv9SJMWRX" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">50001</td><td><span data-option="c7bSQ5JNyEzd">TCP</span></td><td align="center">TCP port</td></tr><tr><td align="center">50002</td><td><span data-option="sTSvdCtBoTFb">SSL</span></td><td align="center">SSL port</td></tr><tr><td align="center">8000</td><td><span data-option="c7bSQ5JNyEzd">TCP</span></td><td align="center">Admin port</td></tr></tbody></table>
 
 [^1]: zmqpubhashblock port
 

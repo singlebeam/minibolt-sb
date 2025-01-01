@@ -19,11 +19,7 @@ layout:
 
 We set up [LND](https://github.com/lightningnetwork/lnd), the Lightning Network Daemon by [Lightning Labs](https://lightning.engineering/).
 
-<div align="center">
-
-<img src="../images/lightning-network-daemon-logo.png" alt="">
-
-</div>
+<div align="center"><img src="../images/lightning-network-daemon-logo.png" alt=""></div>
 
 ## Requirements
 
@@ -117,7 +113,7 @@ cd /tmp
 * Set a temporary version environment variable to the installation
 
 ```sh
-VERSION=0.18.3
+VERSION=0.18.4
 ```
 
 * Download the application, checksums, and signature
@@ -180,12 +176,13 @@ curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/
 
 Expected output:
 
-<pre data-full-width="false"><code><strong>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-</strong>                                  Dload  Upload   Total   Spent    Left  Speed
-100  6900  100  6900    0     0  19676      0 --:--:-- --:--:-- --:--:-- 19714
-gpg: key 372CBD7633C61696: "Olaoluwa Osuntokun &#x3C;laolu32@gmail.com>" <a data-footnote-ref href="#user-content-fn-3">imported</a>
+<pre data-full-width="false"><code>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1306  100  1306    0     0   2958      0 --:--:-- --:--:-- --:--:--  2961
+gpg: /home/admin/.gnupg/trustdb.gpg: trustdb created
+gpg: key DC42612E89237182: public key "Olaoluwa Osuntokun &#x3C;laolu32@gmail.com>" <a data-footnote-ref href="#user-content-fn-3">imported</a>
 gpg: Total number processed: 1
-gpg:              unchanged: 1
+gpg:               imported: 1
 </code></pre>
 
 * Verify the signature of the text file containing the checksums for the application
@@ -196,13 +193,13 @@ gpg --verify manifest-roasbeef-v$VERSION-beta.sig manifest-v$VERSION-beta.txt
 
 **Example** of expected output:
 
-<pre><code>gpg: Signature made Mon 13 Nov 2023 11:45:38 PM UTC
-gpg:                using RSA key 60A1FA7DA5BFF08BDCBBE7903BBD59E99B280306
+<pre><code>gpg: Signature made Wed 18 Dec 2024 07:56:51 PM UTC
+gpg:                using EDDSA key 296212681AADF05656A2CDEE90525F7DEEE0AD86
 gpg: <a data-footnote-ref href="#user-content-fn-4">Good signature</a> from "Olaoluwa Osuntokun &#x3C;laolu32@gmail.com>" [unknown]
 gpg: WARNING: This key is not certified with a trusted signature!
 gpg:          There is no indication that the signature belongs to the owner.
-Primary key fingerprint: E4D8 5299 674B 2D31 FAA1  892E 372C BD76 33C6 1696
-     Subkey fingerprint: 60A1 FA7D A5BF F08B DCBB  E790 3BBD 59E9 9B28 0306
+Primary key fingerprint: A5B6 1896 952D 9FDA 83BC  054C DC42 612E 8923 7182
+     Subkey fingerprint: 2962 1268 1AAD F056 56A2  CDEE 9052 5F7D EEE0 AD86
 </code></pre>
 
 ### Timestamp check
@@ -377,13 +374,13 @@ nano /data/lnd/lnd.conf
 * Paste the following content. Save and exit
 
 {% hint style="warning" %}
-\-> Replace `<YOUR_FANCY_ALIAS>` with your preferred alias e.g: `SatoshiLNnode`⚡. Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ [https://emojikeyboard.top/](https://emojikeyboard.top/)
+-> Replace `<YOUR_FANCY_ALIAS>` with your preferred alias e.g: `SatoshiLNnode`⚡. Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ [https://emojikeyboard.top/](https://emojikeyboard.top/)
 
-\-> Replace `#ff9900` with your preferred color. You can choose the color you want at [https://www.color-hex.com/](https://www.color-hex.com/)
+-> Replace `#ff9900` with your preferred color. You can choose the color you want at [https://www.color-hex.com/](https://www.color-hex.com/)
 
-\-> Uncomment and replace #minchansize=20000[^11] with your preferred minimum incoming channel size
+-> Uncomment and replace #minchansize=20000[^11] with your preferred minimum incoming channel size
 
-\-> Uncomment and replace #bitcoin.feerate=1[^12] / #bitcoin.basefee=1000[^13] with your preferred channels fees
+-> Uncomment and replace #bitcoin.feerate=1[^12] / #bitcoin.basefee=1000[^13] with your preferred channels fees
 {% endhint %}
 
 <pre><code># MiniBolt: lnd configuration
@@ -528,14 +525,11 @@ TimeoutStopSec=3600
 
 # Directory creation and permissions
 ####################################
-RuntimeDirectory=lightningd
-RuntimeDirectoryMode=0710
 User=lnd
 Group=lnd
 
 # Hardening Measures
 ####################
-PrivateTmp=true
 ProtectSystem=full
 NoNewPrivileges=true
 PrivateDevices=true
@@ -628,7 +622,7 @@ or 'n' to create a new seed (Enter y/x/n):
 ```
 
 {% hint style="info" %}
-\-> Now, you could have 2 possible scenarios, follow the proper steps depending on your case⬇️
+-> Now, you could have 2 possible scenarios, follow the proper steps depending on your case⬇️
 {% endhint %}
 
 {% tabs %}
@@ -638,7 +632,7 @@ or 'n' to create a new seed (Enter y/x/n):
 * Press `n` and enter
 
 {% hint style="info" %}
-If you choose this option, the next step will be choosing the passphrase **(optional -** press enter to proceed without a cipher seed passphrase\*\*)\*\*
+If you choose this option, the next step will be selecting the passphrase (**optional** - press enter to proceed without a cipher seed passphrase)
 {% endhint %}
 
 Expected output:
@@ -671,7 +665,7 @@ These 24 words are all that you need (and the `channel.backup` file in case of d
 
 **Write these 24 words down manually on a piece of paper and store it in a safe place**
 
-You can use a simple piece of paper, write them on the custom themed [Shiftcrypto backup card](https://shiftcrypto.ch/backupcard/backupcard\_print.pdf), or even [stamp the seed words into metal](../bonus/bitcoin/safu-ninja.md)
+You can use a simple piece of paper, write them on the custom themed [Shiftcrypto backup card](https://shiftcrypto.ch/backupcard/backupcard_print.pdf), or even [stamp the seed words into metal](../bonus/bitcoin/safu-ninja.md)
 {% endhint %}
 
 {% hint style="danger" %}
@@ -786,7 +780,7 @@ Jun 05 19:48:36 minibolt lnd[124224]: 2023-11-26 19:48:36.361 [INF] LNWL: Finish
 {% endtabs %}
 
 {% hint style="info" %}
-The current state of your channels, however, cannot be recreated from this seed. For this, the Static Channel Backup stored `/data/lnd/data/chain/bitcoin/mainnet/channel.backup` is updated for each channel opening and closing
+However, the current state of your channels, cannot be recreated from this seed. For this, the Static Channel Backup stored `/data/lnd/data/chain/bitcoin/mainnet/channel.backup` is updated for each channel opening and closing
 
 There is a dedicated [guide](channel-backup.md) to making an automatic backup
 {% endhint %}
@@ -824,7 +818,7 @@ We interact with LND using the application `lncli`. At the moment, only the user
 ln -s /data/lnd /home/admin/.lnd
 ```
 
-* Check symbolic link has been created correctly
+* Check that the symbolic link has been created correctly
 
 ```bash
 ls -la /home/admin
@@ -866,6 +860,12 @@ drwx------  2 admin admin  4096 Jul 11 20:47 .ssh
 sudo chmod -R g+X /data/lnd/data/
 ```
 
+* And allow it to read the file `admin.macaroon`
+
+```bash
+sudo chmod g+r /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon
+```
+
 * Check if you can use `lncli` with the `admin` user by querying LND for information
 
 ```sh
@@ -875,7 +875,7 @@ lncli getinfo
 ## LND in action
 
 {% hint style="success" %}
-&#x20;Now your Lightning node is ready. This is also the point of no return. Up until now, you can just start over. Once you send real Bitcoin to your MiniBolt, you have "skin in the game"
+Now your Lightning node is ready. This is also the point of no return. Up until now, you can just start over. Once you send real Bitcoin to your MiniBolt, you have "skin in the game"
 {% endhint %}
 
 {% hint style="info" %}
@@ -890,19 +890,11 @@ Watchtowers are other Lightning nodes that can monitor your channels for you. If
 
 A watchtower can only send such a punishing transaction to your wallet, so you don't have to trust them. It's good practice to add a few watchtowers, just to be on the safe side.
 
-* With user `admin`, add the [Lightning Network+ watchtower](https://lightningnetwork.plus/watchtower) Tor address as a first example
+* With user `admin`, add the Tor address of the [official MiniBolt Watchtower Server](../#free-services) as a first example
 
 {% code overflow="wrap" %}
 ```bash
-lncli wtclient add 023bad37e5795654cecc69b43599da8bd5789ac633c098253f60494bde602b60bf@iiu4epqzm6cydqhezueenccjlyzrqeruntlzbx47mlmdgfwgtrll66qd.onion:9911
-```
-{% endcode %}
-
-* Or the clearnet address
-
-{% code overflow="wrap" %}
-```bash
-lncli wtclient add 023bad37e5795654cecc69b43599da8bd5789ac633c098253f60494bde602b60bf@34.216.52.158:9911
+lncli wtclient add 02ad47b4e41cfce258e2db8d7eb9a194570ca29beba2897970d1ecc7d1c9a2726b@zm32w2qs2lf6xljnvqnmv6o2xlufsf4g6vfjihyydg4yhxph4fnqcvyd.onion:9911
 ```
 {% endcode %}
 
@@ -918,9 +910,9 @@ Expected output:
 {
     "towers": [
         {
-            "pubkey": "023bad37e5795654cecc69b43599da8bd5789ac633c098253f60494bde602b60bf",
+            "pubkey": "02ad47b4e41cfce258e2db8d7eb9a194570ca29beba2897970d1ecc7d1c9a2726b",
             "addresses": [
-                "iiu4epqzm6cydqhezueenccjlyzrqeruntlzbx47mlmdgfwgtrll66qd.onion:9911"
+                "zm32w2qs2lf6xljnvqnmv6o2xlufsf4g6vfjihyydg4yhxph4fnqcvyd.onion:9911"
             ],
             "active_session_candidate": true,
             "num_sessions": 0,
@@ -951,16 +943,16 @@ Same you can connect as a watchtower client to other watchtower servers, you cou
 lncli tower info
 ```
 
-Expected output:
+**Example** of expected output:
 
 ```
 {
-  "pubkey": "023bad37e5795654cecc69b43599da8bd5789ac633c098253f60494bde602b60bf",
+  "pubkey": "02ad47b4e41cfce258e2db8d7eb9a194570ca29beba2897970d1ecc7d1c9a2726b",
   "listeners": [
       "[::]:9911"
   ],
   "uris": [
-      "iiu4epqzm6cydqhezueenccjlyzrqeruntlzbx47mlmdgfwgtrll66qd.onion:9911"
+      "zm32w2qs2lf6xljnvqnmv6o2xlufsf4g6vfjihyydg4yhxph4fnqcvyd.onion:9911"
   ]
 }
 ```
@@ -1024,7 +1016,7 @@ Continue with the guide on the [Create systemd service](lightning-client.md#crea
 {% hint style="danger" %}
 Attention: this process is very risky, supposedly this [software is in an experimental state](https://github.com/lightninglabs/lndinit/pull/21) which could damage your existing LND database. **Act at your own risk**❗
 
-\-> It is recommended to start from scratch by closing all existing channels, rather than a migration to ensure we don't lose anything because it is not possible to come back to the old bbolt database once migrated
+-> It is recommended to start from scratch by closing all existing channels, rather than a migration to ensure we don't lose anything because it is not possible to come back to the old bbolt database once migrated
 {% endhint %}
 
 #### Install dependencies
@@ -1371,7 +1363,7 @@ The `[WRN]` logs indicate that LND has detected an existing old bbolt database a
 
 
 
-\-> You can delete these logs by following the [next section](lightning-client.md#optional-delete-old-bbolt-files-database)
+-> You can delete these logs by following the [next section](lightning-client.md#optional-delete-old-bbolt-files-database)
 
 
 
@@ -1566,11 +1558,7 @@ sudo rm /usr/local/bin/lnd && sudo rm /usr/local/bin/lncli
 
 ## Port reference
 
-|  Port | Protocol |               Use              |
-| :---: | :------: | :----------------------------: |
-|  9735 |    TCP   |        Default P2P port        |
-| 10009 |    TCP   |        Default gRPC port       |
-|  9911 |    TCP   | Default Watchtower server port |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="7Up5aFCtAhTE" label="TCP" color="blue"></option><option value="lN0Rb1BwaZr0" label="SSL" color="blue"></option><option value="Wo2y5caRH1ZO" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">9735</td><td><span data-option="7Up5aFCtAhTE">TCP</span></td><td align="center">Default P2P port</td></tr><tr><td align="center">10009</td><td><span data-option="7Up5aFCtAhTE">TCP</span></td><td align="center">Default gRPC port</td></tr><tr><td align="center">9911</td><td><span data-option="7Up5aFCtAhTE">TCP</span></td><td align="center">Default Watchtower server port</td></tr></tbody></table>
 
 [^1]: zmqpubrawblock port
 

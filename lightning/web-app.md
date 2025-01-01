@@ -59,9 +59,9 @@ npm -v
 ```
 
 {% hint style="info" %}
-\-> If the "`node -v"` output is **`>=18`**, you can move to the next section.
+-> If the "`node -v"` output is **`>=18`**, you can move to the next section.
 
-\-> If Nodejs is not installed (`-bash: /usr/bin/node: No such file or directory`), follow this [Node + NPM bonus guide](../bonus/system/nodejs-npm.md) to install it
+-> If Nodejs is not installed (`-bash: /usr/bin/node: No such file or directory`), follow this [Node + NPM bonus guide](../bonus/system/nodejs-npm.md) to install it
 {% endhint %}
 
 ### Reverse proxy & Firewall
@@ -385,7 +385,7 @@ nano thubConfig.yaml
 
 * Copy and paste the next information
 
-<pre><code>masterPassword: '<a data-footnote-ref href="#user-content-fn-1">PASSWORD</a>'
+<pre class="language-yaml"><code class="lang-yaml">masterPassword: '<a data-footnote-ref href="#user-content-fn-1">PASSWORD</a>'
 accounts:
   - name: 'MiniBolt'
     serverUrl: '127.0.0.1:10009'
@@ -618,7 +618,7 @@ Expected output:
 {% endhint %}
 
 {% hint style="success" %}
-Congrats**!** You now have  ThunderHub up and running
+Congrat&#x73;**!** You now have  ThunderHub up and running
 {% endhint %}
 
 ## Extras (optional)
@@ -1034,9 +1034,6 @@ sudo ufw delete X
 
 ## Port reference
 
-| Port |  Protocol |           Use          |
-| :--: | :-------: | :--------------------: |
-| 3000 |    TCP    |    Default HTTP port   |
-| 4002 | TCP (SSL) | HTTPS port (encrypted) |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="K1YTaXNgK9iY" label="TCP" color="blue"></option><option value="rBwkQwPZUMt0" label="SSL" color="blue"></option><option value="zQnHZmzcUdq4" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">3000</td><td><span data-option="K1YTaXNgK9iY">TCP</span></td><td align="center">Default HTTP port</td></tr><tr><td align="center">4002</td><td><span data-option="rBwkQwPZUMt0">SSL</span></td><td align="center">HTTPS port (encrypted)</td></tr></tbody></table>
 
 [^1]: Default password unless defined in account

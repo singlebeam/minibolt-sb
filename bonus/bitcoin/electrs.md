@@ -36,7 +36,7 @@ Difficulty: Medium
 
 ## Preparations
 
-\-> Make sure that you have followed the [Activate mempool & reduce 'dbcache' after a full sync](../../bitcoin/bitcoin/bitcoin-client.md#activate-mempool-and-reduce-dbcache-after-a-full-sync) section.
+-> Make sure that you have followed the [Activate mempool & reduce 'dbcache' after a full sync](../../bitcoin/bitcoin/bitcoin-client.md#activate-mempool-and-reduce-dbcache-after-a-full-sync) section.
 
 ### Install dependencies
 
@@ -273,7 +273,7 @@ cd /tmp
 * Set a temporary version environment variable to the installation
 
 ```sh
-VERSION=0.10.6
+VERSION=0.10.7
 ```
 
 * Download the source code and go to the `electrs` folder
@@ -571,7 +571,7 @@ sudo systemctl start electrs
 </details>
 
 {% hint style="success" %}
-Electrs will now index the Bitcoin blockchain to provide all necessary information to wallets. With this, the wallets you use no longer need to connect to any third-party server to communicate with the Bitcoin peer-to-peer network
+Congrats! Now you have a self-hosted Electrum Server on your node. Now you can process installing the [Blockchain Explorer: BTC RPC Explorer](../../bitcoin/bitcoin/blockchain-explorer.md) or connect your [Desktop signing app: Sparrow Wallet](../../bitcoin/bitcoin/desktop-signing-app-sparrow.md) or [Electrum Wallet ](electrum-wallet-desktop.md)[Desktop](electrum-wallet-desktop.md)
 {% endhint %}
 
 ### Validation
@@ -589,7 +589,7 @@ tcp   LISTEN 0      128          0.0.0.0:50021      0.0.0.0:*    users:(("electr
 tcp   LISTEN 0      128        127.0.0.1:14224      0.0.0.0:*    users:(("electrs",pid=54749,fd=3))
 ```
 
-* And the SSL `50002` port
+* And the SSL `50022` port
 
 ```bash
 sudo ss -tulpn | grep 50022
@@ -602,7 +602,7 @@ tcp   LISTEN 0   511   0.0.0.0:50022   0.0.0.0:*    users:(("nginx",pid=719,fd=5
 ```
 
 {% hint style="info" %}
-Electrs must first fully index the blockchain and compact its database before you can connect to it with your wallets. This can take a few hours. Only proceed with the [next section](../../bitcoin/bitcoin/desktop-wallet.md) once Electrs is ready
+Electrs must first fully index the blockchain and compact its database before you can connect to it with your wallets. This can take a few hours. Only proceed with the [next section](../../bitcoin/bitcoin/desktop-signing-app-sparrow.md) once Electrs is ready
 {% endhint %}
 
 ## Extras (optional)
@@ -611,7 +611,7 @@ Electrs must first fully index the blockchain and compact its database before yo
 
 To use your Electrum server when you're on the go, you can easily create a Tor hidden service. This way, you can connect the BitBoxApp or Electrum wallet remotely, or even share the connection details with friends and family. Note that the remote device needs to have Tor installed as well.
 
-* Wwith the user `admin`, edit the `torrc` file
+* With the user `admin`, edit the `torrc` file
 
 ```sh
 sudo nano +63 /etc/tor/torrc --linenumbers
@@ -683,7 +683,7 @@ sudo systemctl restart btcrpcexplorer
 sudo systemctl restart electrs
 ```
 
-* Check logs and pay attention to the next log if that attends to the new version installed
+* Check logs and pay attention to the next log if that attends to the new version installed and no error logs
 
 ```bash
 journalctl -fu electrs
@@ -745,7 +745,7 @@ sudo rm /etc/systemd/system/electrs.service
 
 ### Delete user & group
 
-* Ensure you are logged in with the user `admin`. Delete the electrs user.\
+* Ensure you are logged in with the user `admin`. Delete the `electrs` user.\
   Don't worry about `userdel: electrs mail spool (/var/mail/electrs) not found` output, the uninstall has been successful
 
 ```bash
@@ -839,10 +839,7 @@ sudo ufw delete X
 
 ## Port reference
 
-|  Port |  Protocol |       Use      |
-| :---: | :-------: | :------------: |
-| 50021 |    TCP    |  Default port  |
-| 50022 | TCP (SSL) | Encrypted port |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="PM9OdZyqffcj" label="TCP" color="blue"></option><option value="fow02dq4Lt4x" label="SSL" color="blue"></option><option value="HHci4T1IS7Pb" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">50021</td><td><span data-option="PM9OdZyqffcj">TCP</span></td><td align="center">Default port</td></tr><tr><td align="center">50022</td><td><span data-option="fow02dq4Lt4x">SSL</span></td><td align="center">Encrypted port</td></tr></tbody></table>
 
 [^1]: Check this
 

@@ -62,9 +62,9 @@ npm -v
 ```
 
 {% hint style="info" %}
-\-> If the "`node -v"` output is **`>=18`**, you can move to the next section.
+-> If the "`node -v"` output is **`>=18`**, you can move to the next section.
 
-\-> If Nodejs is not installed (`-bash: /usr/bin/node: No such file or directory`), follow this [Node + NPM bonus guide](../../bonus/system/nodejs-npm.md) to install it
+-> If Nodejs is not installed (`-bash: /usr/bin/node: No such file or directory`), follow this [Node + NPM bonus guide](../../bonus/system/nodejs-npm.md) to install it
 {% endhint %}
 
 * Update and upgrade your OS
@@ -156,13 +156,7 @@ sudo adduser btcrpcexplorer bitcoin
 
 * Change to the new `btcrpcexplorer` user
 
-```sh
-sudo su - btcrpcexplorer
-```
-
-* Set a temporary version environment variable to the installation
-
-<pre class="language-bash"><code class="lang-bash"><strong>VERSION=3.4.0
+<pre class="language-sh"><code class="lang-sh"><strong>sudo su - btcrpcexplorer
 </strong></code></pre>
 
 * Import the GPG key of the developer
@@ -171,28 +165,38 @@ sudo su - btcrpcexplorer
 curl https://github.com/janoside.gpg | gpg --import
 ```
 
+**Example** of expected output:
+
+```
+gpg: /home/btcrpcexplorer/.gnupg/trustdb.gpg: trustdb created
+gpg: key B326ACF51F317B69: public key "Dan Janosik <dan@47.io>" imported
+gpg: key 846311D3D259BFF1: public key "Dan Janosik <dan@47.io>" imported
+gpg: key 70C0B166321C0AF8: public key "Dan Janosik <dan@47.io>" imported
+gpg: Total number processed: 3
+gpg:               imported: 3
+```
+
 * Download the source code directly from GitHub and go to the `btc-rpc-explorer` folder
 
 {% code overflow="wrap" %}
 ```sh
-git clone --branch v$VERSION https://github.com/janoside/btc-rpc-explorer.git && cd btc-rpc-explorer
+git clone https://github.com/janoside/btc-rpc-explorer.git && cd btc-rpc-explorer
 ```
 {% endcode %}
 
 * Verify the release
 
 ```bash
-git verify-commit v$VERSION
+git verify-commit $(git rev-parse HEAD)
 ```
 
 **Example** of expected output:
 
 ```
-gpg: Signature made Wed Jun 14 15:18:11 2023 CEST
+gpg: Signature made Mon 16 Dec 2024 03:23:58 PM UTC
 gpg:                using EDDSA key 4D841E6E6B1B68EBFAB4A9E670C0B166321C0AF8
-gpg: Good signature from "Dan Janosik <dan@47.io>" [unknown]
-gpg: WARNING: This key is not certified with a trusted signature!
-gpg:          There is no indication that the signature belongs to the owner.
+gpg: Good signature from "Dan Janosik <dan@47.io>" [expired]
+gpg: Note: This key has expired!
 Primary key fingerprint: 4D84 1E6E 6B1B 68EB FAB4  A9E6 70C0 B166 321C 0AF8
 ```
 
@@ -231,7 +235,7 @@ found 12 vulnerabilities (8 moderate, 4 high)
 **Example** of expected output:
 
 ```
-> "version": "3.4.0",
+"version": "3.4.0",
 ```
 
 ## Configuration
@@ -259,7 +263,7 @@ Activate any setting by removing the `#` at the beginning of the line or editing
 BTCEXP_BITCOIND_COOKIE=/data/bitcoin/.cookie
 ```
 
-* To get address balances, either an Electrum server or an external service is necessary. Your local Electrum server can provide address transaction lists, balances, and more
+* An Electrum server or an external service is necessary to get address balances. Your local Electrum server can provide address transaction lists, balances, and more
 
 ```
 # Uncomment & replace the value of these lines
@@ -286,7 +290,7 @@ exit
 
 ### Create systemd service
 
-Now we'll make sure our blockchain explorer starts as a service on the PC so that it's always running.
+Now we'll ensure our blockchain explorer starts as a service on the PC so that it's always running.
 
 * As user `admin`, create the service file
 
@@ -533,7 +537,7 @@ RPC Terminal / Browser require authentication. Set an authentication password vi
 ```
 {% endcode %}
 
-\-> Remember to give them the **`password [D]`** if you added password protection in the reference step
+-> Remember to give them the **`password [D]`** if you added password protection in the reference step
 {% endhint %}
 
 {% hint style="info" %}
@@ -586,8 +590,6 @@ abcdefg..............xyz.onion
 
 ## Upgrade
 
-Updating to a [new release](https://github.com/janoside/btc-rpc-explorer/releases) is straightforward, but make sure to check out the [change log](https://github.com/janoside/btc-rpc-explorer/blob/master/CHANGELOG.md) first.
-
 * With `admin` user, stop the service
 
 ```sh
@@ -600,36 +602,16 @@ sudo systemctl stop btcrpcexplorer
 sudo su - btcrpcexplorer
 ```
 
-* Set a temporary version environment variable to the installation
-
-```bash
-VERSION=3.4.0
-```
-
 * Go to the `btc-rpc-explorer` folder
 
 ```sh
 cd btc-rpc-explorer
 ```
 
-* Fetch the latest GitHub repository information
+* Update the repository with the latest commits
 
 ```sh
-git fetch
-```
-
-```sh
-git reset --hard HEAD
-```
-
-* Display the release tags (use the latest in this example)
-
-```sh
-git tag
-```
-
-```sh
-git checkout v$VERSION
+git pull origin $(git rev-parse --abbrev-ref HEAD)
 ```
 
 * Install dependencies
@@ -755,7 +737,4 @@ sudo ufw delete X
 
 ## Port reference
 
-| Port |  Protocol |           Use          |
-| :--: | :-------: | :--------------------: |
-| 3002 |    TCP    |    Default HTTP port   |
-| 4000 | TCP (SSL) | HTTPS port (encrypted) |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="Y6T21FHnnCsO" label="TCP" color="blue"></option><option value="mjMppURefbOV" label="SSL" color="blue"></option><option value="sthlT2JmYCAj" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">3002</td><td><span data-option="Y6T21FHnnCsO">TCP</span></td><td align="center">Default HTTP port</td></tr><tr><td align="center">4000</td><td><span data-option="mjMppURefbOV">SSL</span></td><td align="center">HTTPS port (encrypted)</td></tr></tbody></table>
