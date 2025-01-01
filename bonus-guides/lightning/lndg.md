@@ -33,18 +33,65 @@ Difficultry: Hard
 
 ## Preparations
 
-To run LNDg you will need to install **`PostgreSQL`**, **`venv`**, and ***`uWSGI`***
+### Reverse proxy & Firewall
 
+In the security [section](../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
 
-### Firewall
+Enable the Nginx reverse proxy to route external encrypted HTTPS traffic internally to LNDg. The `error_page 497` directive instructs browsers that send HTTP requests to resend them over HTTPS.
 
-* Configure firewall to allow incoming HTTP requests:
+* With user `admin`, create the reverse proxy configuration
 
 ```bash
-sudo ufw allow 8890/tcp comment 'allow LNDg ssl from anywhere'
+sudo nano /etc/nginx/sites-available/lndg-reverse-proxy.conf
 ```
 
-### PostgreSQL Database for LNDg
+* Paste the complete following configuration. Save and exit
+
+```nginx
+server {
+  listen 8890 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
+
+  location / {
+    proxy_pass http://127.0.0.1:8889;
+  }
+}
+```
+
+* Create the symbolic link that points to the directory `sites-enabled`
+
+{% code overflow="wrap" %}
+```bash
+sudo ln -s /etc/nginx/sites-available/lndg-reverse-proxy.conf /etc/nginx/sites-enabled/
+```
+{% endcode %}
+
+* Test Nginx configuration
+
+```bash
+sudo nginx -t
+```
+
+Expected output:
+
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+* Reload NGINX configuration to apply changes
+
+```bash
+sudo systemctl reload nginx
+```
+
+* Configure the firewall to allow incoming HTTP requests from anywhere to the web server
+
+```bash
+sudo ufw allow 8890/tcp comment 'allow LNDg SSL from anywhere'
+```
+
+### PostgreSQL
 
 * With user `admin`, check if you already have PostgreSQL installed
 
@@ -63,42 +110,30 @@ If you obtain "**command not found**" outputs, you need to follow the [PostgreSQ
 {% endhint %}
 
 
-### PostgreSQL
+#### Create PostgreSQL database for LNDg
 
 * With user `admin`, create a new database for LNDg as the `postgres` user and assign the user `admin` as the owner
 
 ```bash
 sudo -u postgres createdb -O admin lndg
 ```
+
+#### Prepare for PostgreSQL integration
+
 * Get required packages to build [psycopg2](https://www.psycopg.org/docs/) - used by LNDg to connect with PostgreSQL
 
 ```bash
 sudo apt install gcc python3-dev libpq-dev
 ```
 
-
 ### Python virtual environment
 
-[Virtualenv](https://virtualenv.pypa.io/en/latest/) is a tool to create isolated Python environments. 
+[venv](https://docs.python.org/3/library/venv.html) is a module that supports creating lightweight "virtual environments". We will use *venv* to islolate the process of building the tools required to run LNDg so that we can avoid conflicts with our system's Python installation and other Python projects. 
 
-* With user `admin`, check if you already have `virtualenv` installed
-
-```bash
-virtualenv --version
-```
-
-**Example** of expected output:
+* With user `admin`, install the python3-venv package
 
 ```bash
-virtualenv 20.13.0+ds from /usr/lib/python3/dist-packages/virtualenv/__init__.py
-```
-
-{% hint style="info" %}
-If you obtain "**command not found**" outputs, install `virtualenv` with apt
-{% endhint %}
-
-```bash
-sudo apt install virtualenv
+sudo apt install python3-venv
 ```
 
 ## Installation
