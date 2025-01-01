@@ -78,7 +78,7 @@ sudo apt install gcc python3-dev libpq-dev
 
 ### Python virtual environment
 
-[venv](https://docs.python.org/3/library/venv.html) is a module that supports creating lightweight "virtual environments". We will use *venv* to islolate the process of building the tools required to run LNDg so that we can avoid conflicts with our system's Python installation and other Python projects. 
+[venv](https://docs.python.org/3/library/venv.html) is a module that supports creating lightweight "virtual environments". We will use ***venv*** to islolate the process of building and running the tools associated with LNDg so that we can avoid conflicts with our system's Python installation and other Python projects. 
 
 * With user `admin`, install the python3-venv package
 
@@ -190,19 +190,19 @@ gpg:          There is no indication that the signature belongs to the owner.
 Primary key fingerprint: 9684 79A1 AFF9 27E3 7D1A  566B B569 0EEE BB95 2194
 ```
 
+## Initialization
+
 * Create a Python virtual environment
 
 ```bash
 python3 -m venv .venv
 ```
-### Initialization
-
 * Install required dependencies
 
 ```bash
 .venv/bin/python -m pip install -r requirements.txt
 ```
-* Initialize necessary settings for your Django site. A *FIRST TIME LOGIN PASSWORD* will be generated - save it somewhere safe.
+* Initialize necessary settings for your Django site. A ***FIRST TIME LOGIN PASSWORD*** will be generated - save it somewhere safe.
 
 ```bash
 .venv/bin/python initialize.py
@@ -255,7 +255,9 @@ exit
 ```
 
 --->
-### Configure LNDg to use PostgreSQL
+## Configure LNDg to use PostgreSQL
+
+### Migrate Django default Superuser and database backend
 
 * As the user `lndg`, enter the LNDg installation folder
 
@@ -263,19 +265,29 @@ exit
 cd ~/lndg
 ```
 
+* Prepare initialized database for migration
+
+```bash
+.venv/bin/python manage.py dumpdata > db.json
+```
+
+### Build psycopg2 for PostgreSQL connection
+
 * Upgrade setuptools
 
 ```bash
 .venv/bin/python -m pip install --upgrade setuptools
 ```
 
-* Build psycopg2 for PostgreSQL connection
+* Build it
 
 ```bash
 .venv/bin/python -m pip install psycopg2
 ```
 
-By default, LNDg stores the LN node routing statistics and settings in a SQLite database. We'll update the `DATABASES` section of the initialized `settings.py` file to use our newly created `lndg` database.
+### Update the LNDg settings
+
+By default, LNDg stores the LN node routing statistics and settings in a SQLite database. We'll update the `DATABASES` section of the initialized `settings.py` file to use our newly created `lndg` database from the [Create PostgreSQL database](#create-postgresql-database-for-lndg) section.
 
 * Change to LNDg configuration folder
 
@@ -291,7 +303,7 @@ nano +87 settings.py --linenumbers
 
 * Replace the `DATABASES` section with the following configuration. Save and exit.
 
-<pre></code>
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -302,7 +314,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-</code></pre>
+```
 
 Change back to the LNDg installation folder
 
@@ -310,10 +322,16 @@ Change back to the LNDg installation folder
 cd ~/lndg
 ```
 
-* Initialize the PostgreSQL database
+### Initialize the PostgreSQL database
 
 ```bash
-.venv/bin/python manage.py migrate
+.venv/bin/python manage.py makemigrations && .venv/bin/python manage.py migrate
+```
+
+* Load the initial data into the PostgreSQL database
+
+```bash
+.venv/bin/python manage.py loaddata db.json
 ```
 
 * Exit to the `admin` user session
@@ -322,9 +340,11 @@ cd ~/lndg
 exit
 ```
 
-### Backend Controller
+## Backend Controller
 
 The LNDg Python script `~/lndg/controller.py` orchestrates the services needed to update the backend database with the most up-to-date information, rebalance any channels based on your LNDg dashboard settings, listen for any failure events in your HTLC stream, and serves the p2p trade secrets.
+
+### Create lndg-controller systemd service
 
 * As user `admin`, create a systemd service file to run the LNDg `controller.py` Python script
 
@@ -333,19 +353,19 @@ sudo nano /etc/systemd/system/lndg-controller.service
 ```
 * Paste the following configuration. Save and exit.
 
-<pre><code>
+```
 # MiniBolt: systemd unit for LNDg backend controller
 # /etc/systemd/system/lndg-controller.service
-  
+
 [Unit]
 Description=LNDg backend controller
-<strong>Requires=lnd.service
-</strong>After=lnd.service
+Requires=lnd.service
+After=lnd.service
 
 [Service]
-WorkingDirectory=/home/lndg/lndg
-Environment=PYTHONBUFFERED=1
+Environment=PYTHONUNBUFFERED=1
 ExecStart=/home/lndg/lndg/.venv/bin/python /home/lndg/lndg/controller.py
+WorkingDirectory=/home/lndg/lndg
 
 User=lndg
 Group=lndg
@@ -353,29 +373,49 @@ Group=lndg
 # Process management
 ####################
 Restart=always
-Type=notify
+Type=simple
 RestartSec=60
-TimoutSec=300
+TimeoutSec=300
+TimeoutStopSec=3
 
 # Hardening Measures
 ####################
 PrivateTmp=true
 ProtectSystem=full
-NoNewPriviledges=true
+NoNewPrivileges=true
 PrivateDevices=true
 
 [Install]
 WantedBy=multi-user.target
-</code></pre>
+```
+
+### Run
+
+* Start the LNDg controller service
+
+```bash
+sudo systemctl start lndg-controller
+```
 
 * Enable autoboot **(optional)**
 
 ```bash
 sudo systemctl enable lndg-controller
 ```
-### Web server configuration
+
+### Validation
+
+* Check the status of the LNDg controller service
+
+```bash
+sudo systemctl status lndg-controller
+```
+
+## Web Server - uWSGI
 
 [uWSGI](https://uwsgi-docs.readthedocs.io/en/latest/) is an application server that helps deploy web applications, especially those written in Python. It acts as a bridge between web servers (like Nginx) and web application frameworks (like Django).
+
+### Installation
 
 * Change back to the `lndg` user
 
@@ -383,11 +423,19 @@ sudo systemctl enable lndg-controller
 sudo su - lndg
 ```
 
+* Change to the LNDg installation directory
+
+```bash
+cd ~/lndg
+```
+
 * Install uWSGI within the LNDg Python virtual environment
 
 ```bash
 .venv/bin/python -m pip install uwsgi
 ```
+
+### Configuration
 
 * Create the initialization file
 
@@ -397,7 +445,7 @@ nano lndg.ini
 
 * Paste the following configuration. Save and exit
 
-<pre><code>
+```
 # lndg.ini file
 [uwsgi]
 
@@ -426,7 +474,7 @@ socket          = /home/lndg/lndg/lndg.sock
 chmod-socket    = 660
 # clear environment on exit
 vacuum          = true
-</code></pre>
+```
 
 * Create the uwsgi parameter file
 
@@ -436,7 +484,7 @@ nano uwsgi_params
 
 * Paste the following configuration. Save and exit
 
-<pre><code>
+```
 uwsgi_param  QUERY_STRING       $query_string;
 uwsgi_param  REQUEST_METHOD     $request_method;
 uwsgi_param  CONTENT_TYPE       $content_type;
@@ -453,7 +501,7 @@ uwsgi_param  REMOTE_ADDR        "$remote_addr";
 uwsgi_param  REMOTE_PORT        "$remote_port";
 uwsgi_param  SERVER_PORT        "$server_port";
 uwsgi_param  SERVER_NAME        "$server_name";
-</code></pre>
+```
 
 * Exit the "lndg" user session
 
@@ -472,6 +520,8 @@ sudo mkdir /var/log/uwsgi && sudo touch /var/log/uwsgi/lndg.log && sudo chgrp -R
 sudo touch /home/lndg/lndg/lndg.sock && sudo chown lndg:www-data /home/lndg/lndg/lndg.sock && sudo chmod 660 /home/lndg/lndg/lndg.sock
 ```
 
+### Create uWSGI systemd service
+
 * Create the uWSGI service file
 
 ```bash
@@ -480,7 +530,7 @@ sudo nano /etc/systemd/system/uwsgi.service
 
 * Paste the following configuration. Save and exit
 
-<pre><code>
+```
 # MiniBolt: systemd unit for LNDg uWSGI app
 # /etc/systemd/system/uwsgi.service
 [Unit]
@@ -502,7 +552,7 @@ NotifyAccess=all
 
 [Install]
 WantedBy=multi-user.target
-</code></pre>
+```
 
 * Enable autoboot **(optional)**
 
@@ -510,9 +560,9 @@ WantedBy=multi-user.target
 sudo systemctl enable uwsgi
 ```
 
-### Reverse proxy
+## Reverse proxy
 
-In the [security] section(../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
+In the [security](../index-1/security.md#prepare-nginx-reverse-proxy) section, we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
 
 * With user `admin`, create the reverse proxy configuration
 
@@ -570,7 +620,7 @@ sudo ln -s /etc/nginx/sites-available/lndg-reverse-proxy.conf /etc/nginx/sites-e
 sudo nano /etc/nginx/nginx.conf
 ```
 
-* Add the following configuration lines inside the `http` block, before the closing **`}`** while taking note of proper indents. Save and exit.
+* Add the following configuration lines inside the `http` block, before the closing **`}`**, while taking note of proper indents. Save and exit.
 
 ```
   # settings used for LNDg Django site
@@ -596,7 +646,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 ```bash
 sudo systemctl reload nginx
 ```
-### Run the web app
+## Run the web app
 
 * Start the uWSGI service
 
@@ -618,6 +668,8 @@ Expected output:
 > Started LNDg uWSGI app.
 
 ```
+
+### Validation
 
 * To check the uwsgi log (Ctrl+c to exit the log)
 
