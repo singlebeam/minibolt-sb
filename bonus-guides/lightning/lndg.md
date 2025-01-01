@@ -33,62 +33,12 @@ Difficultry: Hard
 
 ## Preparations
 
-### Reverse proxy & Firewall
-
-In the security [section](../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
-
-Enable the Nginx reverse proxy to route external encrypted HTTPS traffic internally to LNDg. The `error_page 497` directive instructs browsers that send HTTP requests to resend them over HTTPS.
-
-* With user `admin`, create the reverse proxy configuration
-
-```bash
-sudo nano /etc/nginx/sites-available/lndg-reverse-proxy.conf
-```
-
-* Paste the complete following configuration. Save and exit
-
-```nginx
-server {
-  listen 8890 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
-  location / {
-    proxy_pass http://127.0.0.1:8889;
-  }
-}
-```
-
-* Create the symbolic link that points to the directory `sites-enabled`
-
-{% code overflow="wrap" %}
-```bash
-sudo ln -s /etc/nginx/sites-available/lndg-reverse-proxy.conf /etc/nginx/sites-enabled/
-```
-{% endcode %}
-
-* Test Nginx configuration
-
-```bash
-sudo nginx -t
-```
-
-Expected output:
-
-```
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-```
-
-* Reload NGINX configuration to apply changes
-
-```bash
-sudo systemctl reload nginx
-```
+### Firewall
 
 * Configure the firewall to allow incoming HTTP requests from anywhere to the web server
 
 ```bash
-sudo ufw allow 8890/tcp comment 'allow LNDg SSL from anywhere'
+sudo ufw allow 8889/tcp comment 'allow LNDg SSL from anywhere'
 ```
 
 ### PostgreSQL
@@ -199,53 +149,60 @@ v1.9.0
 * Set a temporary version environment variable to the installation
 
 ```bash
-VERSION=1.9.0
+VERSION=1.9.1
 ```
+<!---
 
-* Immport the GPG key of the developer
+As of v1.9.1, the developer has not renewed the GPG key. The following steps will be updated when the developer renews the key.
+
+* Import the GPG key of the developer
 
 ```bash
 curl https://github.com/cryptosharks131.gpg | gpg --import
 ```
+--->
+* Import the GitHub web flow GPG public key
 
-* Download the source code directly from GitHub, select the latest release branch associated, and go to the `lndg` folder
+```bash
+gpg --keyserver keyserver.ubuntu.com --recv-keys 968479A1AFF927E37D1A566BB5690EEEBB952194
+```
+ 
+* Download the source code directly from GitHub, select the latest associated release branch, and change to the `lndg` folder
 
 ```bash
 git clone --branch v$VERSION https://github.com/cryptosharks131/lndg.git && cd lndg
 ```
-<!---
-
-## will include in when developer renews key ##
 
 * Verify the release
 
 ```bash
-git verify-commit v$VERSION
+git verify-commit $(git rev-parse HEAD)
 ```
 
 **Example** of expected output:
 
 ```
-gpg: Signature made Tue Sep 24 15:58:10 2024 UTC
-gpg:                using RSA key 1957FD54782C190096F4166F0A50748567ADEB28
-gpg: Good signature from "cryptosharks131 <cryptosharks131@gmail.com>" [expired]
-gpg: Note: This key has expired!
-Primary key fingerprint: 1957 FD54 782C 1900 96F4  166F 0A50 7485 67AD EB28
+gpg: Signature made Mon Dec  9 18:16:45 2024 UTC
+gpg:                using RSA key B5690EEEBB952194
+gpg: Good signature from "GitHub <noreply@github.com>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 9684 79A1 AFF9 27E3 7D1A  566B B569 0EEE BB95 2194
 ```
---->
 
 * Create a Python virtual environment
 
 ```bash
-virtualenv -p python3 .venv
+python3 -m venv .venv
 ```
+### Initialization
 
 * Install required dependencies
 
 ```bash
 .venv/bin/python -m pip install -r requirements.txt
 ```
-* Initialize necessary settings for your Django site. A first time password will be generated - save it somewhere safe.
+* Initialize necessary settings for your Django site. A *FIRST TIME LOGIN PASSWORD* will be generated - save it somewhere safe.
 
 ```bash
 .venv/bin/python initialize.py
@@ -332,7 +289,7 @@ cd ~/lndg/lndg
 nano +87 settings.py --linenumbers
 ```
 
-* Replace the `DATABASES` section with the following:
+* Replace the `DATABASES` section with the following configuration. Save and exit.
 
 <pre></code>
 DATABASES = {
@@ -418,9 +375,9 @@ sudo systemctl enable lndg-controller
 ```
 ### Web server configuration
 
-uWSGI is an application server that helps deploy web applications, especially those written in Python. It acts as a bridge between web servers (like Nginx) and web application frameworks (like Django).
+[uWSGI](https://uwsgi-docs.readthedocs.io/en/latest/) is an application server that helps deploy web applications, especially those written in Python. It acts as a bridge between web servers (like Nginx) and web application frameworks (like Django).
 
-* Change to the `lndg` user
+* Change back to the `lndg` user
 
 ```bash
 sudo su - lndg
@@ -504,7 +461,7 @@ uwsgi_param  SERVER_NAME        "$server_name";
 exit
 ```
 
-* Create the log and socket files
+* With user `admin`, create the log and socket files
 <!--- not sure how to optimize/describe this workflow for enduser --->
 
 ```bash
@@ -555,7 +512,7 @@ sudo systemctl enable uwsgi
 
 ### Reverse proxy
 
-In the security [section](../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
+In the [security] section(../index-1/security.md#prepare-nginx-reverse-proxy), we set up Nginx as a reverse proxy. Now we can add the LNDg configuration.
 
 * With user `admin`, create the reverse proxy configuration
 
@@ -564,8 +521,7 @@ sudo nano /etc/nginx/sites-available/lndg-reverse-proxy.conf
 ```
 
 * Paste the following configuration lines. Save and exit.
-
-<pre><code>
+```
 upstream django {
   server unix:///home/lndg/lndg/lndg.sock; # for a file socket
 }
@@ -601,8 +557,7 @@ server {
     include     /home/lndg/lndg/uwsgi_params; # the uwsgi_params file
   }
 }
-</pre></code>
-
+```
 * Create a symlink in the `sites-enabled` directory
 
 ```bash
@@ -615,13 +570,13 @@ sudo ln -s /etc/nginx/sites-available/lndg-reverse-proxy.conf /etc/nginx/sites-e
 sudo nano /etc/nginx/nginx.conf
 ```
 
-* Add the following configuration lines inside the `http` block. Save and exit.
+* Add the following configuration lines inside the `http` block, before the closing **`}`** while taking note of proper indents. Save and exit.
 
-<code></pre>
+```
   # settings used for LNDg Django site
   include /etc/nginx/mime.types;
   default_type application/octet-stream;
-</pre></code>
+```
 
 * Test the nginx configuration
 
@@ -672,7 +627,8 @@ sudo journalctl -fu uwsgi
 
 You can now access LNDg from within your local network by browsing to https://minibolt.local:8889 (or your equivalent IP address).
 
-The default login is `lndg-admin` and the first time password was generated by the `initialize.py` script. You can find the password at `/home/lndg/lndg/data/password.txt'(you should delete this file for security reasons). You can change the password in the GUI.
+* The default login is `lndg-admin` and the first time password was generated by the `initialize.py` script in the [initialization](lndg.md#initialization) step. If you forgot or didn't write it down, you can find the password at `/home/lndg/lndg/data/password.txt` (you should delete this file for security reasons).
+* *You can change the initial password after logging into in the GUI.*
 
 * To delete the first time password file
 
@@ -682,16 +638,16 @@ sudo rm /home/lndg/lndg/data/password.txt
 
 ## Dashboard privacy configuration
 
-LNDg offers the possibility to create links to blockchain and lightning explorers on node aliases and transaction IDs. By default, LNDg uses public websites 1ml.com for its lightning explorer and mempool.space for its blockchain explorer.
+LNDg offers the possibility to create links to blockchain and lightning explorers on node aliases and transaction IDs. By default, LNDg uses public websites *1ml.com* for its lightning explorer and *mempool.space* for its blockchain explorer.
 
 ### Blockchain explorer
 
 To preserve privacy it is better that you use your own self-hosted blockchain explorer (e.g. the BTC RPC Explorer).
 
 * Open your LNDg website at https://minibolt.local:8889 (replace minibolt.local with your node's IP address if necessary)
-* Click on the "Advanced settings" link
-* Scroll down to the "Update Local Settings" section
-* Find the "NET URL" option and paste the following value if you use [BTC RPC Explorer](../../bitcoin/btcrpcexplorer.md):
+* Click on the `Advanced` settings" link
+* Scroll down to the `Update Local Settings` section
+* Find the `NET URL` option and paste the following value if you use [BTC RPC Explorer](../../bitcoin/btcrpcexplorer.md):
 
 ```
 https://minibolt.local:4000
@@ -699,11 +655,11 @@ https://minibolt.local:4000
 
 ### Lightning explorer
 
-Although there is not yet a self-hosted, private, lightning explorer, the Mempool lightning explorer offers a better lightning explorer than 1ML and is probably less likely to log your IP address.
+Although as of this writing there is not yet a self-hosted, private, lightning explorer, the Mempool lightning explorer offers a better lightning explorer than 1ML and is probably less likely to log your IP address.
 
-* Find the "Graph URL" option and paste the following value:
+* Find the `Graph URL` option
   * if you don't want to leak your IP address, delete the content of the box and leave it empty
-  * if you want to use Mempool, enter: `https://mempool.space/lightning`. As an additional privacy step, you may consider running through a vpn.
+  * if you want to use Mempool, enter: `https://mempool.space/lightning`. As an additional privacy step, you may consider running through a VPN.
 
 
 
