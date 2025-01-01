@@ -97,7 +97,7 @@ cd /tmp
 * Set a temporary version environment variable to the installation
 
 ```bash
-VERSION=2024.10.1
+VERSION=2024.12.2
 ```
 
 * Download Cloudflare Tunnel Client (Cloudflared)
@@ -236,7 +236,7 @@ CONNECTOR ID                         CREATED              ARCHITECTURE VERSION  
 * Now assign a CNAME record that points traffic to your tunnel subdomain
 
 {% hint style="info" %}
-> If you want to tunnel only a specific service, you can choose the final subdomain for that service, for example, if you going to expose only the `BTC RPC Explorer`, choose `explorer.<domain.com>` or if you want to expose only the `BTCpay Server`, choose `btcpay.<domain.com>`
+> If you want to tunnel only a specific service, you can choose the final subdomain for that service, for example, if you going to expose only the `BTC RPC Explorer`, choose `explorer.<domain.com>` or if you want to expose only the `BTCPay Server`, choose `btcpay.<domain.com>`
 
 > Replace **`<UUID>`** for your one obtained before
 {% endhint %}
@@ -501,7 +501,7 @@ sudo systemctl stop cloudflared
 cloudflared --version
 ```
 
-* Follow again the [installation section](cloudflare-tunnel.md#installation) of this guide, replacing the environment variable `"VERSION=x.xx"` value for the [latest](https://github.com/cloudflare/cloudflared/releases) if it has not already been changed in this guide
+* Follow again the [Installation section](cloudflare-tunnel.md#installation) of this guide, replacing the environment variable `"VERSION=x.xx"` value for the [latest](https://github.com/cloudflare/cloudflared/releases) if it has not already been changed in this guide
 * Start Cloudflared again
 
 ```bash
@@ -536,8 +536,6 @@ Processing triggers for man-db (2.10.2-1) ...
 
 ## Port reference
 
-|  Post  | Protocol |     Use     |
-| :----: | :------: | :---------: |
-| Random |    TCP   | Random port |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="fvPqH8XB8K9x" label="TCP" color="blue"></option><option value="RXaWGWFxPiEP" label="SSL" color="blue"></option><option value="zcFKV2AkzRl4" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">Random</td><td><span data-option="fvPqH8XB8K9x">TCP</span></td><td align="center">Random port</td></tr></tbody></table>
 
 [^1]: Random port

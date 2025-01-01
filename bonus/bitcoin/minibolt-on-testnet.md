@@ -14,7 +14,7 @@ layout:
 
 # MiniBolt on Testnet
 
-You can run your MiniBolt node on **Testnet4** to develop and experiment with new applications, without putting real money at risk. This bonus guide highlights all configuration changes compared to the main guide.
+You can run your MiniBolt node on **Testnet4** to develop and experiment with new applications without risking real money. This bonus guide highlights all configuration changes compared to the main guide.
 
 {% hint style="warning" %}
 Difficulty: Medium
@@ -38,7 +38,11 @@ The great news is that most of the MiniBolt guide can be used as-is. The small a
 
 ## Bitcoin
 
-### [Bitcoin client: Bitcoin Core](../../bitcoin/bitcoin/bitcoin-client.md) (mainnet + testnet simultaneous mode)
+### [Bitcoin client: Bitcoin Core](../../bitcoin/bitcoin/bitcoin-client.md)
+
+{% hint style="info" %}
+Mainnet + testnet simultaneous mode
+{% endhint %}
 
 * Follow the complete MiniBolt guide from the beginning [(Bitcoin client included)](../../bitcoin/bitcoin/bitcoin-client.md), when you arrive at the ["Configuration section"](../../bitcoin/bitcoin/bitcoin-client.md#configuration)
 
@@ -153,7 +157,11 @@ Use the flag `--testnet4` when you use the `bitcoin-cli` commands, e.g `bitcoin-
 The rest of the Bitcoin client guide is the same as the mainnet mode
 {% endhint %}
 
-### [Electrum server: Fulcrum](../../bitcoin/bitcoin/electrum-server.md) (only testnet mode)
+### [Electrum server: Fulcrum](../../bitcoin/bitcoin/electrum-server.md)
+
+{% hint style="info" %}
+Only testnet mode
+{% endhint %}
 
 Follow the complete Electrum server guide from the beginning, when you arrive at the ["Configure Firewall"](../../bitcoin/bitcoin/electrum-server.md#configure-firewall) section:
 
@@ -257,7 +265,7 @@ You should now be able to connect to your Fulcrum server remotely via Tor using 
 The rest of the **Fulcrum** guide is the same as the mainnet mode
 {% endhint %}
 
-### [Blockchain Explorer: BTC RPC Explorer](../../bitcoin/bitcoin/blockchain-explorer.md) (not Testnet4 compatible)
+### [Blockchain Explorer: BTC RPC Explorer](../../bitcoin/bitcoin/blockchain-explorer.md)
 
 {% hint style="danger" %}
 #### Not Testnet4 compatible yet, the next steps are not valid!
@@ -287,20 +295,20 @@ The rest of the **BTC RPC Explorer** guide is the same as the mainnet mode
 #### Not Testnet4 compatible yet, the next steps are not valid!
 {% endhint %}
 
-* Follow the complete guide from the beginning, when you arrive at the [Configur](../../lightning/lightning-client.md#configuration)[ation](../../lightning/lightning-client.md#configuration) section, edit `lnd.conf`
+* Follow the complete guide from the beginning, when you arrive at the [Configuration](../../lightning/lightning-client.md#configuration) section, edit `lnd.conf`
 
 ```bash
 nano /data/lnd/lnd.conf
 ```
 
-* Replace the parameter `bitcoin.mainnet=true` with the `bitcoin.testnet=true` to enable LND in testnet mode and add the location of the `bitcoin-testnet3.conf` in the `[Bitcoind]` section
+* Replace the parameter `bitcoin.mainnet=true` with the `bitcoin.testnet4=true` to enable LND in testnet mode and add the location of the `bitcoin-testnet4.conf` in the `[Bitcoind]` section
 
 ```
 [Bitcoin]
-bitcoin.testnet=true
+bitcoin.testnet4=true
 
 [Bitcoind]
-bitcoind.config=/data/bitcoin/bitcoin-testnet3.conf
+bitcoind.config=/data/bitcoin/bitcoin-testnet4.conf
 ```
 
 {% hint style="info" %}
@@ -310,29 +318,37 @@ If you use [Ordirespector](ordisrespector.md) on testnet, add the next lines at 
 ```
 [fee]
 # Use external fee estimator
-fee.url=https://nodes.lightning.computer/fees/v1/btctestnet-fee-estimates.json
+fee.url=https://nodes.lightning.computer/fees/v1/btctestnet4-fee-estimates.json
 ```
 
 * When you arrive at the [Create systemd service](../../lightning/lightning-client.md#create-systemd-service) section, edit the `lnd.service` file and replace `ExecStop` parameter to this
 
 ```
-ExecStop=/usr/local/bin/lncli --network=testnet stop
+ExecStop=/usr/local/bin/lncli --network=testnet4 stop
 ```
 
 {% hint style="info" %}
-When you arrive at the [Watchtower client](../../lightning/lightning-client.md#watchtower-client-recommended) section, keep in mind that the Watchtower server suggested won't work with the LND testnet, same with the LND mainnet peer suggested to open the channel and send a payment
+When you arrive at the [Watchtower client](../../lightning/lightning-client.md#watchtower-client-recommended) section, keep in mind that the Watchtower server suggested won't work with the LND testnet4, same with the LND mainnet peer suggested to open the channel and send a payment
 {% endhint %}
 
 **Interacting with the LND daemon**
 
-* Note that when interacting with the LND daemon, you'll need to use the `"--network testnet"` flag. Example:
+* Note that when interacting with the LND daemon, you'll need to use the `"--network=testnet4"` flag. Example:
 
 ```sh
-lncli --network=testnet --tlscertpath /data/lnd/tls.cert.tmp create
+lncli --network=testnet4 --tlscertpath /data/lnd/tls.cert.tmp create
+```
+
+#### Allow user "admin" to work with LND
+
+* Note that when you arrive at this section, you need to replace the command: `sudo chmod g+r /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon` to the next
+
+```bash
+sudo chmod g+r /data/lnd/data/chain/bitcoin/testnet4/admin.macaroon
 ```
 
 {% hint style="info" %}
-Note that it has [a list of testnet aliases](https://raw.githubusercontent.com/minibolt-guide/minibolt/main/resources/.bash\_aliases) related to these commonly used commands to make it easier to introduce in the terminal. Follow the ["Aliases bonus guide"](../system/aliases.md) to install it
+It has [a list of testnet aliases](https://raw.githubusercontent.com/minibolt-guide/minibolt/main/resources/.bash_aliases) related to these commonly used commands to make it easier to introduce in the terminal. Follow the ["Aliases bonus guide"](../system/aliases.md) to install it
 {% endhint %}
 
 {% hint style="success" %}
@@ -414,10 +430,10 @@ Be careful to add `--nocert` parameter only to the onion and Wireguard VPN netwo
 
 ## Bonus section
 
-### Bitcoin: [Electrs](electrs.md) (only testnet mode)
+### Bitcoin: [Electrs](electrs.md)
 
-{% hint style="danger" %}
-#### Not Testnet4 compatible yet, the next steps are not valid!
+{% hint style="info" %}
+Only testnet mode
 {% endhint %}
 
 Follow the complete guide from the beginning, when you arrive at the [Reverse proxy & Firewall](electrs.md#reverse-proxy-and-firewall) section, follow the next steps:
@@ -488,7 +504,7 @@ server_banner = "Welcome to electrs (Electrum Rust Server) running on a MiniBolt
 sudo nano +63 /etc/tor/torrc
 ```
 
-* Edit the torrc file and replace ports to `40021/40022` to match with testnet4 mode
+* Edit the torrc file and replace ports to `40021/40022` to match with the testnet4 mode
 
 ```
 # Hidden Service Electrs Testnet4 TCP & SSL
@@ -523,12 +539,4 @@ The rest of the **Electrs guide** is the same as the mainnet mode
 
 Here we are going to describe only what ports differ from the mainnet mode:
 
-|  Port |  Protocol |                   Use                  |
-| :---: | :-------: | :------------------------------------: |
-| 48333 |    TCP    |            P2P Testnet4 port           |
-| 48334 |    TCP    |       P2P Testnet4 secondary port      |
-| 48332 |    TCP    |            RPC Testnet4 port           |
-| 40001 |    TCP    |          Fulcrum Testnet4 port         |
-| 40002 | TCP (SSL) | Fulcrum server Testnet4 encrypted port |
-| 40021 |    TCP    |          Electrs Testnet4 port         |
-| 40022 | TCP (SSL) | Electrs server Testnet4 encrypted port |
+<table><thead><tr><th align="center">Port</th><th width="100">Protocol<select><option value="r72xqe5kee4m" label="TCP" color="blue"></option><option value="27pYzFjkBNZz" label="SSL" color="blue"></option><option value="CQbhYp3TNADL" label="UDP" color="blue"></option></select></th><th align="center">Use</th></tr></thead><tbody><tr><td align="center">48333</td><td><span data-option="r72xqe5kee4m">TCP</span></td><td align="center">P2P Testnet4 port</td></tr><tr><td align="center">48334</td><td><span data-option="r72xqe5kee4m">TCP</span></td><td align="center">P2P Testnet4 secondary port</td></tr><tr><td align="center">48332</td><td><span data-option="r72xqe5kee4m">TCP</span></td><td align="center">RPC Testnet4 port</td></tr><tr><td align="center">40001</td><td><span data-option="r72xqe5kee4m">TCP</span></td><td align="center">Fulcrum Testnet4 port</td></tr><tr><td align="center">40002</td><td><span data-option="27pYzFjkBNZz">SSL</span></td><td align="center">Fulcrum server Testnet4 encrypted port</td></tr><tr><td align="center">40021</td><td><span data-option="r72xqe5kee4m">TCP</span></td><td align="center">Electrs Testnet4 port</td></tr><tr><td align="center">40022</td><td><span data-option="27pYzFjkBNZz">SSL</span></td><td align="center">Electrs server Testnet4 encrypted port</td></tr></tbody></table>
