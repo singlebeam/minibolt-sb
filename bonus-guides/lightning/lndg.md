@@ -14,7 +14,7 @@ layout:
 
 # LNDg
 
-[LNDg](https://github.com/cryptosharks131/lndg){:target="_blank"} is a lite GUI web interface to help you manually manage your node and automate operations such as rebalancing, fee adjustments and channel node opening.
+[LNDg](https://github.com/cryptosharks131/lndg) is a lite GUI web interface to help you manually manage your node and automate operations such as rebalancing, fee adjustments and channel node opening.
 
 {% hint style="danger" %}
 Difficultry: Hard
@@ -28,19 +28,20 @@ Difficultry: Hard
 * [LND](../../lightning/lightning-client.md) 
 * Others
   * [PostgreSQL](../system/postgresql.md)
-  * [virtualenv](https://virtualenv.pypa.io/en/latest/)
+  * [venv](https://docs.python.org/3/library/venv.html)
   * [uWSGI](https://uwsgi-docs.readthedocs.io/)
 
 ## Preparations
 
-To run LNDg you will need to install `PostgreSQL`, `virtualenv`, and `uWSGI` (within the Python virtual environment created with virtualenv).
+To run LNDg you will need to install **`PostgreSQL`**, **`venv`**, and ***`uWSGI`***
+
 
 ### Firewall
 
 * Configure firewall to allow incoming HTTP requests:
 
 ```bash
-sudo ufw allow 8889/tcp comment 'allow LNDg ssl from anywhere'
+sudo ufw allow 8890/tcp comment 'allow LNDg ssl from anywhere'
 ```
 
 ### PostgreSQL Database for LNDg
@@ -61,18 +62,20 @@ psql (PostgreSQL) 17.0 (Ubuntu 17.0-1.pgdg22.04+1)
 If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide installation process](../bonus-guides/system/postgresql.md#installation) before continuing with this guide
 {% endhint %}
 
-#### Create PostgreSQL database
+
+### PostgreSQL
 
 * With user `admin`, create a new database for LNDg as the `postgres` user and assign the user `admin` as the owner
 
 ```bash
 sudo -u postgres createdb -O admin lndg
 ```
-* Get required packages to connect LNDg with PostgreSQL
+* Get required packages to build [psycopg2](https://www.psycopg.org/docs/) - used by LNDg to connect with PostgreSQL
 
 ```bash
 sudo apt install gcc python3-dev libpq-dev
 ```
+
 
 ### Python virtual environment
 
