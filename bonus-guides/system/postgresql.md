@@ -20,7 +20,7 @@ PostgreSQL is a powerful, open source object-relational database system that use
 Difficulty: Medium
 {% endhint %}
 
-<figure><img src="../../../.gitbook/assets/PostgreSQL-Logo-white.png" alt="" width="563"><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/PostgreSQL-Logo-white.png" alt="" width="563"><figcaption></figcaption></figure>
 
 ## Installation
 

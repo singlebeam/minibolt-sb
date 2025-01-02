@@ -35,7 +35,7 @@ More information can be found in its [documentation](https://docs.btcpayserver.o
 * [NBXplorer](btcpay-server.md#install-nbxplorer)
 * Others
   * [.NET Core SDK](btcpay-server.md#install-.net-core-sdk)
-  * [PostgreSQL](../system/postgresql/)
+  * [PostgreSQL](../system/postgresql.md)
 
 ## Preparations
 
@@ -183,7 +183,7 @@ psql (PostgreSQL) 16.3 (Ubuntu 16.3-1.pgdg22.04+1)
 ```
 
 {% hint style="info" %}
-If PostgreSQL is not installed (output: Command 'psql' not found), follow this [PostgreSQL](../system/postgresql/) guide to install it
+If PostgreSQL is not installed (output: Command 'psql' not found), follow this [PostgreSQL](../system/postgresql.md) guide to install it
 {% endhint %}
 
 #### Create PostgreSQL databases
@@ -1365,7 +1365,7 @@ sudo systemctl start btcpay
 
 ### Uninstall service
 
-* With user `admin`, stop btcpay and nbxplorer
+* With user `admin`, stop btcpay and nbxplorer&#x20;
 
 ```bash
 sudo systemctl stop btcpay && sudo systemctl stop nbxplorer

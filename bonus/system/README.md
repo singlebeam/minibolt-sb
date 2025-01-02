@@ -39,7 +39,7 @@ layout:
 
 ### Databases
 
-* [**PostgreSQL**](../../bonus-guides/system/postgresql/) - Install / Update / Uninstall PostgreSQL database
+* [**PostgreSQL**](../../bonus-guides/system/postgresql.md) - Install / Update / Uninstall PostgreSQL database
 
 ### Security
 

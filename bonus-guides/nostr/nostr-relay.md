@@ -49,7 +49,7 @@ You can obtain more info about nostr on these additional resources:
 
 * [Cloudflare tunnel](../system/cloudflare-tunnel.md)
 * Others
-  * [PostgreSQL](../system/postgresql/)
+  * [PostgreSQL](../system/postgresql.md)
   * [Rustup + Cargo](../system/rustup-+-cargo.md)
 
 ## Preparations
@@ -123,7 +123,7 @@ psql (PostgreSQL) 15.3 (Ubuntu 15.3-1.pgdg22.04+1)
 ```
 
 {% hint style="info" %}
-If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide](../system/postgresql/) to install it and then come back to continue with the guide
+If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide](../system/postgresql.md) to install it and then come back to continue with the guide
 {% endhint %}
 
 #### Create PostgreSQL database
