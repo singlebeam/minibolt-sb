@@ -25,7 +25,7 @@ We set up [LND](https://github.com/lightningnetwork/lnd), the Lightning Network 
 
 * [Bitcoin Core](../bitcoin/bitcoin/bitcoin-client.md)
 * Others
-  * [PostgreSQL](../bonus-guides/system/postgresql.md)
+  * [PostgreSQL](../bonus-guides/system/postgresql/)
   * [Go!](../bonus-guides/system/go.md) **(optional)**
 
 ## Preparations
@@ -87,7 +87,7 @@ psql (PostgreSQL) 15.3 (Ubuntu 15.3-1.pgdg22.04+1)
 ```
 
 {% hint style="info" %}
-If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide installation progress](../bonus-guides/system/postgresql.md#installation) to install it and then come back to continue with the guide
+If you obtain "**command not found**" outputs, you need to follow the [PostgreSQL bonus guide installation progress](../bonus-guides/system/postgresql/#installation) to install it and then come back to continue with the guide
 {% endhint %}
 
 #### Create PostgreSQL database
@@ -414,8 +414,8 @@ tlsdisableautofill=true
 
 ## (Optional) High fee environment settings
 <a data-footnote-ref href="#user-content-fn-17">#max-commit-fee-rate-anchors=</a><a data-footnote-ref href="#user-content-fn-18">10</a>
-<strong><a data-footnote-ref href="#user-content-fn-19">#max-channel-fee-allocation=</a><a data-footnote-ref href="#user-content-fn-20">0.5</a>
-</strong>
+<a data-footnote-ref href="#user-content-fn-19">#max-channel-fee-allocation=</a><a data-footnote-ref href="#user-content-fn-20">0.5</a>
+
 ## Communication
 accept-keysend=true
 accept-amp=true
@@ -1361,11 +1361,7 @@ The `[WRN]` logs indicate that LND has detected an existing old bbolt database a
 [...]
 ```
 
-
-
 -> You can delete these logs by following the [next section](lightning-client.md#optional-delete-old-bbolt-files-database)
-
-
 
 Pay attention to this `[INF]` significant log to confirm you are using PostgreSQL now
 
@@ -1510,7 +1506,7 @@ sudo systemctl disable lnd
 sudo rm /etc/systemd/system/lnd.service
 ```
 
-### &#x20;Delete user & group&#x20;
+### Delete user & group
 
 * Delete lnd user's group
 
