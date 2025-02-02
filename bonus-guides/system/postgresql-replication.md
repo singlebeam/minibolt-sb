@@ -18,7 +18,7 @@ PostgreSQL streaming replication is asynchronous by default. If the primary serv
 
 Synchronous replication offers the ability to confirm that all changes made by a transaction have been transferred to one or more synchronous standby servers. This extends that standard level of durability offered by a transaction commit.
 
-Once streaming replication has been configured, configuring synchronous replication requires only one additional configuration step: [synchronous_standby_names](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-SYNCHRONOUS-STANDBY-NAMES) must be set to a non-empty value. ```synchronous_commit``` must also be set to ```on```, but since this is the default value, typically no change is required. This configuration will cause each commit to wait for confirmation that the standby has written the commit record to durable storage.
+Once streaming replication has been configured, configuring synchronous replication requires only one additional configuration step: [synchronous_standby_names](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-SYNCHRONOUS-STANDBY-NAMES) must be set to a non-empty value. This configuration will cause each commit to wait for confirmation that the standby has written the commit record to durable storage.
 
 ### Replication slots
 
@@ -138,7 +138,7 @@ listen_addresses = '*'
 wal_level = replica
 ```
 
-* To enable ***asyncronous*** streaming replication, uncomment and edit or add the following line:
+* To enable ***syncronous*** streaming replication, uncomment and edit or add the following line:
 
 ```bash
 synchronous_standby_names = '*'
