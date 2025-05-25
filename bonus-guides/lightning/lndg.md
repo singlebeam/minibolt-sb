@@ -103,10 +103,17 @@ sudo adduser --disabled-password --gecos "" lndg
 ```bash
 sudo usermod -a -G lnd,www-data lndg
 ```
-* Add 'www-data' user to the lndg group
+
+* Add `www-data` user to the lndg group
 
 ```bash
 sudo adduser www-data lndg
+```
+
+* Allow `lndg` group execute permissions on home directory
+
+```bash
+sudo chmod 710 /home/lndg/
 ```
 
 * Change to the `lndg` user
