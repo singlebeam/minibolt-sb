@@ -297,7 +297,7 @@ cd ~/lndg
 .venv/bin/python manage.py makemigrations && .venv/bin/python manage.py migrate
 ```
 
-* Load the initial data into the PostgreSQL database
+* Load the initial data into the PostgreSQL database *SKIP THIS STEP IF CONNECTING TO EXISTING DATABASE*
 
 ```bash
 .venv/bin/python manage.py loaddata db.json
